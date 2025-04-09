@@ -6,15 +6,17 @@ import '/models/receita.dart';
 class ReceitaRepository {
   static final DatabaseHelper _db = DatabaseHelper();
 
-  Future<int> adicionar(String nome, String nota, String tempoPreparo) async {
-    var receita = Receita(
-      nome: nome,
-      criadoEm: DateTime.now().toString(),
-      id: Uuid().v4(),
-      nota: int.parse(nota),
-      tempoPreparo: tempoPreparo,
-    );
+  Future<int> adicionar(Receita receita) async {
     return _db.inserir("receita", receita.toMap());
+  }
+
+  Future<int> editar(Receita receita) async {
+    return _db.editar(
+      "receita",
+      receita.toMap(),
+      condicao: 'id = ?',
+      conidcaoArgs: [receita.id],
+    );
   }
 
   Future<List<Receita>> todasReceitas() async {

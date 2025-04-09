@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
+import 'package:uuid/uuid.dart';
+
+import '/models/receita.dart';
 
 class ReceitaCreateScreen extends StatelessWidget {
   static const String routeName = '/receita-create';
@@ -20,12 +23,14 @@ class ReceitaCreateScreen extends StatelessWidget {
     final TextEditingController _controllerTempo = TextEditingController();
 
     void onPressed() async {
-      var receita = await ReceitaRepository().adicionar(
-        _controllerNome.text,
-        _controllerNota.text,
-        _controllerTempo.text,
+      var receita = Receita(
+        nome: _controllerNome.text,
+        criadoEm: DateTime.now().toString(),
+        id: Uuid().v4(),
+        nota: int.parse(_controllerNota.text),
+        tempoPreparo: _controllerTempo.text,
       );
-      print(receita);
+      await ReceitaRepository().adicionar(receita);
     }
 
     return Scaffold(

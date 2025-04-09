@@ -57,12 +57,19 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     ).then((_) => _carregarDados());
   }
 
-  void editarReceita() {
-    Navigator.pushNamed(
-      context,
-      ReceitaEditScreen.routeName,
-      arguments: _receita,
-    ).then((_) => _carregarDados());
+  void editarReceita() async {
+    final receitaEditada =
+        await Navigator.pushNamed(
+              context,
+              ReceitaEditScreen.routeName,
+              arguments: _receita,
+            ).then((_) => _carregarDados())
+            as Receita?;
+    if (receitaEditada != null) {
+      setState(() {
+        _receita = receitaEditada;
+      });
+    }
   }
 
   @override
