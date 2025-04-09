@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:receitas_trabalho_2/models/receita.dart';
+import 'package:receitas_trabalho_2/screens/receita_create_screen.dart';
 import 'package:receitas_trabalho_2/screens/receita_detalhe_screen.dart';
 import '/models/pessoa.dart';
 import '/repositories/pessoa_repository.dart';
@@ -83,6 +84,12 @@ class ReceitaListScreen extends StatelessWidget {
             );
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          Navigator.pushNamed(context, ReceitaCreateScreen.routeName);
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

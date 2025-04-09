@@ -37,18 +37,18 @@ class ReceitaEditScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(8),
         child: SingleChildScrollView(
-          child: Center(
+          child: Form(
             child: Column(
               children: [
-                TextField(
+                TextFormField(
                   decoration: const InputDecoration(labelText: 'Nome'),
                   controller: _controllerNome,
                 ),
-                TextField(
+                TextFormField(
                   decoration: const InputDecoration(labelText: 'Nota'),
                   controller: _controllerNota,
                 ),
-                TextField(
+                TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Tempo de Preparo',
                   ),
