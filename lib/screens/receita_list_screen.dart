@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
-import '/models/pessoa.dart';
 import '../repositories/receita_repository.dart';
-import 'package:uuid/uuid.dart';
 
 class ReceitaListScreen extends StatefulWidget {
   const ReceitaListScreen({super.key});
@@ -52,7 +50,11 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          Navigator.pushNamed(context, ReceitaCreateScreen.routeName);
+          Navigator.pushNamed(context, ReceitaCreateScreen.routeName).then(
+            (_) => setState(() {
+              _carregarReceitas();
+            }),
+          );
         },
         child: const Icon(Icons.add),
       ),

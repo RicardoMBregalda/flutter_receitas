@@ -1,7 +1,5 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
-import '/models/receita.dart';
+import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
 
 class ReceitaCreateScreen extends StatelessWidget {
   static const String routeName = '/receita-create';
@@ -15,16 +13,20 @@ class ReceitaCreateScreen extends StatelessWidget {
 
   const ReceitaCreateScreen({super.key});
 
-  void onPressed() {
-    // Implementar a lógica de salvar a receita
-    print("Receita salva!");
-  }
-
   @override
   Widget build(BuildContext context) {
     final TextEditingController _controllerNome = TextEditingController();
     final TextEditingController _controllerNota = TextEditingController();
     final TextEditingController _controllerTempo = TextEditingController();
+
+    void onPressed() async {
+      var receita = await ReceitaRepository().adicionar(
+        _controllerNome.text,
+        _controllerNota.text,
+        _controllerTempo.text,
+      );
+      print(receita);
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Criar Receita')),
@@ -37,16 +39,31 @@ class ReceitaCreateScreen extends StatelessWidget {
                 TextFormField(
                   decoration: const InputDecoration(labelText: 'Nome'),
                   controller: _controllerNome,
+                  validator:
+                      (value) =>
+                          (value == null || value.isEmpty)
+                              ? "Insira um nome"
+                              : null,
                 ),
                 TextFormField(
                   decoration: const InputDecoration(labelText: 'Nota'),
                   controller: _controllerNota,
+                  validator:
+                      (value) =>
+                          (value == null || value.isEmpty)
+                              ? "Insira uma nota"
+                              : null,
                 ),
                 TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Tempo de Preparo',
                   ),
                   controller: _controllerTempo,
+                  validator:
+                      (value) =>
+                          (value == null || value.isEmpty)
+                              ? "Insira um tempo de preparo"
+                              : null,
                 ),
                 ElevatedButton(onPressed: onPressed, child: Text("Criar")),
               ],

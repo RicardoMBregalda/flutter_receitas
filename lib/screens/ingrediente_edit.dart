@@ -1,7 +1,6 @@
-import 'dart:ffi';
 import 'package:flutter/material.dart';
+
 import '/models/ingrediente.dart';
-import '/models/receita.dart';
 
 class IngredienteEditScreen extends StatelessWidget {
   static const String routeName = '/ingrediente-edit';

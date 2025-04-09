@@ -1,7 +1,5 @@
-import 'dart:ffi';
 import 'package:flutter/material.dart';
 import '/models/instrucao.dart';
-import '/models/receita.dart';
 
 class InstrucaoEditScreen extends StatelessWidget {
   static const String routeName = '/intrucao-edit';
