@@ -1,68 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/models/receita.dart';
-import 'package:receitas_trabalho_2/screens/receita_create_screen.dart';
-import 'package:receitas_trabalho_2/screens/receita_detalhe_screen.dart';
+import '/models/receita.dart';
+import '/screens/receita_create_screen.dart';
+import '/screens/receita_detalhe_screen.dart';
 import '/models/pessoa.dart';
-import '/repositories/pessoa_repository.dart';
-import '/screens/pessoa_detalhe_screen.dart';
+import '../repositories/receita_repository.dart';
 import 'package:uuid/uuid.dart';
 
-class ReceitaListScreen extends StatelessWidget {
+class ReceitaListScreen extends StatefulWidget {
   const ReceitaListScreen({super.key});
-
-  static final List<Receita> _receitas = [
-    Receita(
-      id: '1',
-      nome: 'Receita 1',
-      nota: 5,
-      criadoEm: DateTime.now().toString(),
-      tempoPreparo: '30 min',
-    ),
-    Receita(
-      id: '2',
-      nome: 'Receita 2',
-      nota: 4,
-      criadoEm: DateTime.now().toString(),
-      tempoPreparo: '45 min',
-    ),
-    Receita(
-      id: '3',
-      nome: 'Receita 3',
-      nota: 3,
-      criadoEm: DateTime.now().toString(),
-      tempoPreparo: '1 hora',
-    ),
-    Receita(
-      id: '4',
-      nome: 'Receita 4',
-      nota: 2,
-      criadoEm: DateTime.now().toString(),
-      tempoPreparo: '15 min',
-    ),
-    Receita(
-      id: '5',
-      nome: 'Receita 5',
-      nota: 1,
-      criadoEm: DateTime.now().toString(),
-      tempoPreparo: '2 horas',
-    ),
-    Receita(
-      id: '6',
-      nome: 'Receita 6',
-      nota: 5,
-      criadoEm: DateTime.now().toString(),
-      tempoPreparo: '30 min',
-    ),
-    Receita(
-      id: '7',
-      nome: 'Receita 7',
-      nota: 4,
-      criadoEm: DateTime.now().toString(),
-      tempoPreparo: '45 min',
-    ),
-  ];
-
   static const routeName = '/receita';
+  @override
+  _ReceitaListScreenState createState() => _ReceitaListScreenState();
+}
+
+class _ReceitaListScreenState extends State<ReceitaListScreen> {
+  List<Receita> _receitas = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarReceitas();
+  }
+
+  void _carregarReceitas() async {
+    final receitas = await ReceitaRepository().todasReceitas();
+    setState(() {
+      _receitas = receitas;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

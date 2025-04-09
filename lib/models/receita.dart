@@ -39,5 +39,4 @@ class Receita {
 
   factory Receita.fromJson(String source) =>
       Receita.fromMap(json.decode(source) as Map<String, dynamic>);
-
 }

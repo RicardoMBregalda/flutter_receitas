@@ -1,70 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/models/ingrediente.dart';
-import 'package:receitas_trabalho_2/models/instrucao.dart';
-import 'package:receitas_trabalho_2/models/receita.dart';
-import 'package:receitas_trabalho_2/screens/ingrediente_edit.dart';
-import 'package:receitas_trabalho_2/screens/instrucao_edit.dart.dart';
-import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
+import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
+import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
+import 'package:receitas_trabalho_2/screens/ingrediente_create_screen.dart';
+import 'package:receitas_trabalho_2/screens/instrucao_create_screen.dart';
+import '/models/ingrediente.dart';
+import '/models/instrucao.dart';
+import '/models/receita.dart';
+import '/screens/ingrediente_edit.dart';
+import '/screens/instrucao_edit.dart.dart';
+import '/screens/receita_edit_screen.dart';
 import '/models/pessoa.dart';
-import '/repositories/pessoa_repository.dart';
-import '/screens/pessoa_detalhe_screen.dart';
 import 'package:uuid/uuid.dart';
 
-class ReceitaDetalheScreen extends StatelessWidget {
+class ReceitaDetalheScreen extends StatefulWidget {
   const ReceitaDetalheScreen({super.key});
-
   static const routeName = '/receita_detalhe';
+  @override
+  _ReceitaDetalheScreenState createState() => _ReceitaDetalheScreenState();
+}
 
+class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
+  List<Ingrediente> _ingredientes = [];
+  List<Instrucao> _instrucoes = [];
   @override
   Widget build(BuildContext context) {
     final receita = ModalRoute.of(context)!.settings.arguments as Receita;
-    final List<Ingrediente> ingredientes = [
-      Ingrediente(
-        id: "1",
-        nome: "Farinha de trigo",
-        quantidade: 1,
-        idReceita: receita.id,
-      ),
-      Ingrediente(id: "2", nome: "Ovo", quantidade: 2, idReceita: receita.id),
-      Ingrediente(
-        id: "3",
-        nome: "Açúcar",
-        quantidade: 5,
-        idReceita: receita.id,
-      ),
-      Ingrediente(id: "4", nome: "Sal", quantidade: 1, idReceita: receita.id),
-    ];
-
-    final List<Instrucao> instrucoes = [
-      Instrucao(id: "1", instrucao: "Misture tudo", idReceita: receita.id),
-      Instrucao(
-        id: "2",
-        instrucao: "Asse por 30 minutos",
-        idReceita: receita.id,
-      ),
-      Instrucao(id: "3", instrucao: "Deixe esfriar", idReceita: receita.id),
-    ];
-
     void criarIngrediente() {
-      // Implement your create ingredient functionality here
       Navigator.pushNamed(
         context,
-        ReceitaEditScreen.routeName,
+        IngredienteCreateScreen.routeName,
         arguments: receita,
       );
     }
 
+    void carregarIngredientes() async {
+      var ingredientes = await IngredienteRepository().ingredientesReceita(
+        receita.id,
+      );
+      setState(() {
+        _ingredientes = ingredientes;
+      });
+    }
+
+    void carregarInstrucoes() async {
+      var instrucoes = await InstrucaoRepository().instrucoesReceita(
+        receita.id,
+      );
+      setState(() {
+        _instrucoes = instrucoes;
+      });
+    }
+
     void criarInstrucao() {
-      // Implement your create instruction functionality here
       Navigator.pushNamed(
         context,
-        ReceitaEditScreen.routeName,
+        InstrucaoCreateScreen.routeName,
         arguments: receita,
       );
     }
 
     void editarReceita() {
-      // Implement your edit functionality here
       Navigator.pushNamed(
         context,
         ReceitaEditScreen.routeName,
@@ -72,6 +67,8 @@ class ReceitaDetalheScreen extends StatelessWidget {
       );
     }
 
+    carregarIngredientes();
+    carregarInstrucoes();
     return Scaffold(
       appBar: AppBar(title: Text('Detalhe')),
       body: Padding(
@@ -90,17 +87,17 @@ class ReceitaDetalheScreen extends StatelessWidget {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: ingredientes.length,
+                  itemCount: _ingredientes.length,
                   itemBuilder: (context, index) {
                     return ListTile(
                       title: Text(
-                        '${ingredientes[index].nome} - ${ingredientes[index].quantidade}',
+                        '${_ingredientes[index].nome} - ${_ingredientes[index].quantidade} unidade(s)',
                       ),
                       onTap:
                           () => Navigator.pushNamed(
                             context,
                             IngredienteEditScreen.routeName,
-                            arguments: ingredientes[index],
+                            arguments: _ingredientes[index],
                           ),
                     );
                   },
@@ -113,15 +110,15 @@ class ReceitaDetalheScreen extends StatelessWidget {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
-                  itemCount: instrucoes.length,
+                  itemCount: _instrucoes.length,
                   itemBuilder: (context, index) {
                     return ListTile(
-                      title: Text(instrucoes[index].instrucao),
+                      title: Text(_instrucoes[index].instrucao),
                       onTap:
                           () => Navigator.pushNamed(
                             context,
                             InstrucaoEditScreen.routeName,
-                            arguments: instrucoes[index],
+                            arguments: _instrucoes[index],
                           ),
                     );
                   },

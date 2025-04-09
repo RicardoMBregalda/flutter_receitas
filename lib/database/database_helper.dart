@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'sqls/ingrediente_sql.dart';
 
 class DatabaseHelper {
-  static final String _nomeBancoDeDados = "meubanco.db";
+  static final String _nomeBancoDeDados = "bancolocal12.db";
   static final int _versaoBancoDeDados = 1;
   static late Database _bancoDeDados;
 
@@ -19,9 +19,18 @@ class DatabaseHelper {
   }
 
   Future criarBD(Database db, int versao) async {
-    db.execute(ReceitaSql.criarTabelaReceita());
-    db.execute(IngredienteSql.criarTabelaIngrediente());
-    db.execute(InstrucaoSql.criarTabelaInstrucao());
+    await db.execute(ReceitaSql.criarTabelaReceita());
+    await db.execute(IngredienteSql.criarTabelaIngrediente());
+    await db.execute(InstrucaoSql.criarTabelaInstrucao());
+    for (String sql in ReceitaSql.seedReceitas()) {
+      await db.execute(sql);
+    }
+    for (String sql in IngredienteSql.seedIngredientes()) {
+      await db.execute(sql);
+    }
+    for (String sql in InstrucaoSql.seedInstrucoes()) {
+      await db.execute(sql);
+    }
   }
 
   Future<int> inserir(String tabela, Map<String, Object?> valores) async {
@@ -42,7 +51,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> atualizar(
+  Future<int> editar(
     String tabela,
     Map<String, Object?> valores, {
     String? condicao,
@@ -57,7 +66,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> deletar(
+  Future<int> remover(
     String tabela, {
     String? condicao,
     List<Object>? conidcaoArgs,

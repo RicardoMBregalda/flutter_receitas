@@ -1,7 +1,7 @@
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/models/receita.dart';
+import '/models/receita.dart';
 
 class ReceitaCreateScreen extends StatelessWidget {
   static const String routeName = '/receita-create';

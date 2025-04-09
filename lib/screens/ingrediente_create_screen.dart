@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import '/models/ingrediente.dart';
 import '/models/receita.dart';
 
-class IngredienteEditScreen extends StatelessWidget {
-  static const String routeName = '/ingrediente-edit';
+class IngredienteCreateScreen extends StatelessWidget {
+  static const String routeName = '/ingrediente-create';
 
   static Route route() {
     return MaterialPageRoute(
       settings: const RouteSettings(name: routeName),
-      builder: (_) => const IngredienteEditScreen(),
+      builder: (_) => const IngredienteCreateScreen(),
     );
   }
 
-  const IngredienteEditScreen({super.key});
+  const IngredienteCreateScreen({super.key});
 
   void onPressed() {
     // Implementar a lógica de salvar a receita
@@ -22,17 +22,11 @@ class IngredienteEditScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ingrediente =
-        ModalRoute.of(context)!.settings.arguments as Ingrediente;
-
     final TextEditingController _controllerNome = TextEditingController();
     final TextEditingController _controllerQuantidade = TextEditingController();
 
-    _controllerNome.text = ingrediente.nome;
-    _controllerQuantidade.text = ingrediente.quantidade.toString();
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar Ingrediente')),
+      appBar: AppBar(title: const Text('Adicionar Ingrediente')),
       body: Padding(
         padding: const EdgeInsets.all(8),
         child: SingleChildScrollView(
@@ -47,7 +41,7 @@ class IngredienteEditScreen extends StatelessWidget {
                   decoration: const InputDecoration(labelText: 'Quantidade'),
                   controller: _controllerQuantidade,
                 ),
-                ElevatedButton(onPressed: onPressed, child: Text("Salvar")),
+                ElevatedButton(onPressed: onPressed, child: Text("Adicionar")),
               ],
             ),
           ),

@@ -1,27 +1,24 @@
-
 import 'dart:convert';
 
-class Ingrediente { 
+class Ingrediente {
   String id;
   String nome;
   int quantidade;
-  String idReceita;
-
+  String receitaId;
 
   Ingrediente({
     required this.id,
     required this.nome,
     required this.quantidade,
-    required this.idReceita,
+    required this.receitaId,
   });
-
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
       'nome': nome,
       'quantidade': quantidade,
-      'idReceita': idReceita,
+      'receitaId': receitaId,
     };
   }
 
@@ -30,13 +27,12 @@ class Ingrediente {
       id: map['id'] as String,
       nome: map['nome'] as String,
       quantidade: map['quantidade'] as int,
-      idReceita: map['idReceita'] as String,
+      receitaId: map['receitaId'] as String,
     );
   }
 
   String toJson() => json.encode(toMap());
-  
-  factory Ingrediente.fromJson(String source) => Ingrediente.fromMap(json.decode(source) as Map<String, dynamic>);
 
-
+  factory Ingrediente.fromJson(String source) =>
+      Ingrediente.fromMap(json.decode(source) as Map<String, dynamic>);
 }

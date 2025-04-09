@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import '/models/instrucao.dart';
 import '/models/receita.dart';
 
-class InstrucaoEditScreen extends StatelessWidget {
-  static const String routeName = '/intrucao-edit';
+class InstrucaoCreateScreen extends StatelessWidget {
+  static const String routeName = '/intrucao-create';
 
   static Route route() {
     return MaterialPageRoute(
       settings: const RouteSettings(name: routeName),
-      builder: (_) => const InstrucaoEditScreen(),
+      builder: (_) => const InstrucaoCreateScreen(),
     );
   }
 
-  const InstrucaoEditScreen({super.key});
+  const InstrucaoCreateScreen({super.key});
 
   void onPressed() {
     // Implementar a lógica de salvar a receita
@@ -22,14 +22,10 @@ class InstrucaoEditScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final instrucao = ModalRoute.of(context)!.settings.arguments as Instrucao;
-
     final TextEditingController _controllerInstrucao = TextEditingController();
 
-    _controllerInstrucao.text = instrucao.instrucao;
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar Instrução')),
+      appBar: AppBar(title: const Text('Adicionar Instrução')),
       body: Padding(
         padding: const EdgeInsets.all(8),
         child: SingleChildScrollView(
@@ -40,7 +36,7 @@ class InstrucaoEditScreen extends StatelessWidget {
                   decoration: const InputDecoration(labelText: 'Instrução'),
                   controller: _controllerInstrucao,
                 ),
-                ElevatedButton(onPressed: onPressed, child: Text("Salvar")),
+                ElevatedButton(onPressed: onPressed, child: Text("Adicionar")),
               ],
             ),
           ),
