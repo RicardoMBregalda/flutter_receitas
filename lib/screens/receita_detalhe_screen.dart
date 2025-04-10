@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:logger/web.dart';
 import '/repositories/ingrediente_repository.dart';
 import '/repositories/instrucao_repository.dart';
 import '/screens/ingrediente_create_screen.dart';
@@ -21,6 +22,18 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
   List<Ingrediente> _ingredientes = [];
   List<Instrucao> _instrucoes = [];
   late Receita _receita;
+  bool _isInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      final receita = ModalRoute.of(context)!.settings.arguments as Receita;
+      _receita = receita;
+      _carregarDados();
+      _isInitialized = true;
+    }
+  }
 
   Future<void> _carregarDados() async {
     var ingredientes = await IngredienteRepository().ingredientesReceita(
@@ -31,14 +44,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
       _ingredientes = ingredientes;
       _instrucoes = instrucoes;
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final receita = ModalRoute.of(context)!.settings.arguments as Receita;
-    _receita = receita;
-    _carregarDados();
   }
 
   void criarIngrediente() {
@@ -58,18 +63,21 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
   }
 
   void editarReceita() async {
-    final receitaEditada =
+    Receita? receitaEditada =
         await Navigator.pushNamed(
               context,
               ReceitaEditScreen.routeName,
               arguments: _receita,
-            ).then((_) => _carregarDados())
+            )
             as Receita?;
     if (receitaEditada != null) {
       setState(() {
         _receita = receitaEditada;
+        var logger = Logger();
+        logger.i(_receita.nome);
       });
     }
+    await _carregarDados();
   }
 
   @override
