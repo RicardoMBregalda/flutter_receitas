@@ -24,6 +24,7 @@ class ReceitaCreateScreen extends StatelessWidget {
         tempoPreparo: _controllerTempo.text,
       );
       await ReceitaRepository().adicionar(receita);
+      if (context.mounted) Navigator.pop(context);
     }
 
     return Scaffold(

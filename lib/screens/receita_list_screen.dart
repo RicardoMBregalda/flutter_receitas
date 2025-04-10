@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
@@ -27,6 +28,21 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     });
   }
 
+  void removerReceita(Receita receita) async {
+    await ReceitaRepository().remover(receita);
+    _carregarReceitas();
+  }
+
+  void editarReceita(Receita receita) async {
+    await Navigator.pushNamed(
+          context,
+          ReceitaEditScreen.routeName,
+          arguments: receita,
+        )
+        as Receita?;
+    _carregarReceitas();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,6 +52,19 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
           itemCount: _receitas.length,
           itemBuilder: (context, index) {
             return ListTile(
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () => editarReceita(_receitas[index]),
+                    icon: Icon(Icons.edit),
+                  ),
+                  IconButton(
+                    onPressed: () => removerReceita(_receitas[index]),
+                    icon: Icon(Icons.delete),
+                  ),
+                ],
+              ),
               title: Text(_receitas[index].nome),
               onTap: () {
                 Navigator.pushNamed(

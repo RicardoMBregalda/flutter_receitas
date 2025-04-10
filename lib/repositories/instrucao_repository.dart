@@ -1,3 +1,5 @@
+import 'package:receitas_trabalho_2/models/receita.dart';
+
 import '/database/database_helper.dart';
 import '/models/instrucao.dart';
 
@@ -14,6 +16,22 @@ class InstrucaoRepository {
       instrucao.toMap(),
       condicao: 'id = ?',
       conidcaoArgs: [instrucao.id],
+    );
+  }
+
+  Future<int> remover(Instrucao instrucao) async {
+    return _db.remover(
+      "instrucao",
+      condicao: 'id = ?',
+      conidcaoArgs: [instrucao.id],
+    );
+  }
+
+  Future<int> removerTodasInstrucoesDeUmaReceita(Receita receita) async {
+    return _db.remover(
+      "instrucao",
+      condicao: 'receitaId = ?',
+      conidcaoArgs: [receita.id],
     );
   }
 

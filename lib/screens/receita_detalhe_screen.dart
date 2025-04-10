@@ -62,19 +62,29 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     ).then((_) => _carregarDados());
   }
 
-  void editarReceita() async {
-    Receita? receitaEditada =
-        await Navigator.pushNamed(
-              context,
-              ReceitaEditScreen.routeName,
-              arguments: _receita,
-            )
-            as Receita?;
-    if (receitaEditada != null) {
-      setState(() {
-        _receita = receitaEditada;
-      });
-    }
+  void editarIngrediente(Ingrediente ingrediente) {
+    Navigator.pushNamed(
+      context,
+      IngredienteEditScreen.routeName,
+      arguments: ingrediente,
+    ).then((_) => _carregarDados());
+  }
+
+  void editarInstrucao(Instrucao instrucao) {
+    Navigator.pushNamed(
+      context,
+      InstrucaoEditScreen.routeName,
+      arguments: instrucao,
+    ).then((_) => _carregarDados());
+  }
+
+  void removerInstrucao(Instrucao instrucao) async {
+    await InstrucaoRepository().remover(instrucao);
+    await _carregarDados();
+  }
+
+  void removerIngrediente(Ingrediente ingrediente) async {
+    await IngredienteRepository().remover(ingrediente);
     await _carregarDados();
   }
 
@@ -88,7 +98,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
           child: Center(
             child: Column(
               children: [
-                ElevatedButton(onPressed: editarReceita, child: Text("Editar")),
                 Text('ID ${_receita.id}'),
                 Text('Nome ${_receita.nome}'),
                 Text('Nota ${_receita.nota}'),
@@ -101,15 +110,24 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
                   itemCount: _ingredientes.length,
                   itemBuilder: (context, index) {
                     return ListTile(
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed:
+                                () => editarIngrediente(_ingredientes[index]),
+                            icon: Icon(Icons.edit),
+                          ),
+                          IconButton(
+                            onPressed:
+                                () => removerIngrediente(_ingredientes[index]),
+                            icon: Icon(Icons.delete),
+                          ),
+                        ],
+                      ),
                       title: Text(
                         '${_ingredientes[index].nome} - ${_ingredientes[index].quantidade} unidade(s)',
                       ),
-                      onTap:
-                          () => Navigator.pushNamed(
-                            context,
-                            IngredienteEditScreen.routeName,
-                            arguments: _ingredientes[index],
-                          ).then((_) => _carregarDados()),
                     );
                   },
                 ),
@@ -124,6 +142,21 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
                   itemCount: _instrucoes.length,
                   itemBuilder: (context, index) {
                     return ListTile(
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed:
+                                () => editarInstrucao(_instrucoes[index]),
+                            icon: Icon(Icons.edit),
+                          ),
+                          IconButton(
+                            onPressed:
+                                () => removerInstrucao(_instrucoes[index]),
+                            icon: Icon(Icons.delete),
+                          ),
+                        ],
+                      ),
                       title: Text(_instrucoes[index].instrucao),
                       onTap:
                           () => Navigator.pushNamed(

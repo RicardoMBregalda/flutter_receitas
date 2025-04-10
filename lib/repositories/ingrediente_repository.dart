@@ -1,3 +1,5 @@
+import 'package:receitas_trabalho_2/models/receita.dart';
+
 import '/database/database_helper.dart';
 import '/models/ingrediente.dart';
 
@@ -14,6 +16,22 @@ class IngredienteRepository {
       ingrediente.toMap(),
       condicao: 'id = ?',
       conidcaoArgs: [ingrediente.id],
+    );
+  }
+
+  Future<int> remover(Ingrediente ingrediente) async {
+    return _db.remover(
+      "ingrediente",
+      condicao: 'id = ?',
+      conidcaoArgs: [ingrediente.id],
+    );
+  }
+
+  Future<int> removerTodosIngredientesDeUmaReceita(Receita receita) async {
+    return _db.remover(
+      "ingrediente",
+      condicao: 'receitaId = ?',
+      conidcaoArgs: [receita.id],
     );
   }
 
