@@ -91,91 +91,165 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Detalhe')),
+      appBar: AppBar(title: Text(_receita.nome)),
       body: Padding(
         padding: EdgeInsets.all(8),
         child: SingleChildScrollView(
           child: Center(
             child: Column(
               children: [
-                Text('ID ${_receita.id}'),
-                Text('Nome ${_receita.nome}'),
-                Text('Nota ${_receita.nota}'),
-                Text('Criado em ${_receita.criadoEm}'),
-                Text('Tempo de Preparo ${_receita.tempoPreparo}'),
-                Text('Ingredientes'),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: _ingredientes.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed:
-                                () => editarIngrediente(_ingredientes[index]),
-                            icon: Icon(Icons.edit),
-                          ),
-                          IconButton(
-                            onPressed:
-                                () => removerIngrediente(_ingredientes[index]),
-                            icon: Icon(Icons.delete),
-                          ),
-                        ],
-                      ),
-                      title: Text(
-                        '${_ingredientes[index].nome} - ${_ingredientes[index].quantidade}',
-                      ),
-                    );
-                  },
-                ),
-                ElevatedButton(
-                  onPressed: criarIngrediente,
-                  child: Text("Adicionar Ingrediente"),
-                ),
-                Text('Instruções'),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: _instrucoes.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed:
-                                () => editarInstrucao(_instrucoes[index]),
-                            icon: Icon(Icons.edit),
-                          ),
-                          IconButton(
-                            onPressed:
-                                () => removerInstrucao(_instrucoes[index]),
-                            icon: Icon(Icons.delete),
-                          ),
-                        ],
-                      ),
-                      title: Text(_instrucoes[index].instrucao),
-                      onTap:
-                          () => Navigator.pushNamed(
-                            context,
-                            InstrucaoEditScreen.routeName,
-                            arguments: _instrucoes[index],
-                          ).then((_) => _carregarDados()),
-                    );
-                  },
-                ),
-                ElevatedButton(
-                  onPressed: criarInstrucao,
-                  child: Text("Adicionar Instrução"),
-                ),
+                _buildHeader(),
+                SizedBox(height: 16),
+                _buildListaIngredientes(),
+                SizedBox(height: 16),
+                _buildListaInstrucoes(),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Card(
+      child: Container(
+        decoration: BoxDecoration(),
+        padding: EdgeInsets.all(16),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _receita.nome,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                // ElevatedButton(onPressed: () {}, child: Icon(Icons.edit)),
+              ],
+            ),
+
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.star),
+                SizedBox(width: 4),
+                Text(_receita.nota.toString()),
+                SizedBox(width: 8),
+                Icon(Icons.timer),
+                SizedBox(width: 4),
+                Text(_receita.tempoPreparo),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListaIngredientes() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+          children: [
+            Text(
+              "Ingredientes",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            ElevatedButton.icon(
+              onPressed: criarInstrucao,
+              icon: Icon(Icons.add),
+              label: Text("Adicionar"),
+            ),
+          ],
+        ),
+        SizedBox(height: 8),
+        Card(
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: _ingredientes.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => editarIngrediente(_ingredientes[index]),
+                      icon: Icon(Icons.edit),
+                    ),
+                    IconButton(
+                      onPressed: () => removerIngrediente(_ingredientes[index]),
+                      icon: Icon(Icons.delete),
+                    ),
+                  ],
+                ),
+                title: Text(
+                  '${_ingredientes[index].nome} - ${_ingredientes[index].quantidade}',
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildListaInstrucoes() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+          children: [
+            Text(
+              "Instrucoes",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            ElevatedButton.icon(
+              onPressed: criarInstrucao,
+              icon: Icon(Icons.add),
+              label: Text("Adicionar"),
+            ),
+          ],
+        ),
+        SizedBox(height: 8),
+        Card(
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: _instrucoes.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: () => editarInstrucao(_instrucoes[index]),
+                      icon: Icon(Icons.edit),
+                    ),
+                    IconButton(
+                      onPressed: () => removerInstrucao(_instrucoes[index]),
+                      icon: Icon(Icons.delete),
+                    ),
+                  ],
+                ),
+                title: Text(_instrucoes[index].instrucao),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
