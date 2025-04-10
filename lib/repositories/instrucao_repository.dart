@@ -4,9 +4,18 @@ import '/models/instrucao.dart';
 class InstrucaoRepository {
   static final DatabaseHelper _db = DatabaseHelper();
 
-  // Future<int> adicionar(Receita receita) async {
-  //   return _db.inserir("receita", receita.toMap());
-  // }
+  Future<int> adicionar(Instrucao instrucao) async {
+    return _db.inserir("instrucao", instrucao.toMap());
+  }
+
+  Future<int> editar(Instrucao instrucao) async {
+    return _db.editar(
+      "instrucao",
+      instrucao.toMap(),
+      condicao: 'id = ?',
+      conidcaoArgs: [instrucao.id],
+    );
+  }
 
   Future<List<Instrucao>> instrucoesReceita(String receitaId) async {
     var instrucoesNoBanco = await _db.obterTodos(

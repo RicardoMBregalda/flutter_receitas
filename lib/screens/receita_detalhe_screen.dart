@@ -30,8 +30,8 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     if (!_isInitialized) {
       final receita = ModalRoute.of(context)!.settings.arguments as Receita;
       _receita = receita;
-      _carregarDados();
       _isInitialized = true;
+      _carregarDados();
     }
   }
 
@@ -73,8 +73,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     if (receitaEditada != null) {
       setState(() {
         _receita = receitaEditada;
-        var logger = Logger();
-        logger.i(_receita.nome);
       });
     }
     await _carregarDados();

@@ -6,14 +6,6 @@ import '/models/receita.dart';
 
 class ReceitaCreateScreen extends StatelessWidget {
   static const String routeName = '/receita-create';
-
-  static Route route() {
-    return MaterialPageRoute(
-      settings: const RouteSettings(name: routeName),
-      builder: (_) => const ReceitaCreateScreen(),
-    );
-  }
-
   const ReceitaCreateScreen({super.key});
 
   @override
@@ -21,6 +13,7 @@ class ReceitaCreateScreen extends StatelessWidget {
     final TextEditingController _controllerNome = TextEditingController();
     final TextEditingController _controllerNota = TextEditingController();
     final TextEditingController _controllerTempo = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
 
     void onPressed() async {
       var receita = Receita(
@@ -39,6 +32,7 @@ class ReceitaCreateScreen extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         child: SingleChildScrollView(
           child: Form(
+            key: _formKey,
             child: Column(
               children: [
                 TextFormField(

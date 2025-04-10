@@ -1,44 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
 import '/models/instrucao.dart';
 
-class InstrucaoEditScreen extends StatelessWidget {
-  static const String routeName = '/intrucao-edit';
-
-  static Route route() {
-    return MaterialPageRoute(
-      settings: const RouteSettings(name: routeName),
-      builder: (_) => const InstrucaoEditScreen(),
-    );
-  }
-
+class InstrucaoEditScreen extends StatefulWidget {
   const InstrucaoEditScreen({super.key});
+  static const String routeName = '/instrucao-edit';
 
-  void onPressed() {
-    // Implementar a lógica de salvar a receita
-    print("Instrucao salva!");
+  @override
+  _InstrucaoEditScreenState createState() => _InstrucaoEditScreenState();
+}
+
+class _InstrucaoEditScreenState extends State<InstrucaoEditScreen> {
+  final TextEditingController _controllerInstrucao = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  @override
+  void dispose() {
+    _controllerInstrucao.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final instrucao = ModalRoute.of(context)!.settings.arguments as Instrucao;
-
-    final TextEditingController _controllerInstrucao = TextEditingController();
-
     _controllerInstrucao.text = instrucao.instrucao;
 
+    Future<void> onPressed(BuildContext context) async {
+      Instrucao instrucaoEditado = Instrucao(
+        id: instrucao.id,
+        instrucao: _controllerInstrucao.text,
+        receitaId: instrucao.receitaId,
+      );
+      await InstrucaoRepository().editar(instrucaoEditado);
+      if (context.mounted) Navigator.pop(context);
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Editar Instrução')),
+      appBar: AppBar(title: const Text('Editar Instrucao')),
       body: Padding(
         padding: const EdgeInsets.all(8),
         child: SingleChildScrollView(
           child: Form(
+            key: _formKey,
             child: Column(
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Instrução'),
+                  decoration: const InputDecoration(labelText: 'Instrucao'),
                   controller: _controllerInstrucao,
+                  validator:
+                      (value) =>
+                          (value == null || value.isEmpty)
+                              ? "Insira uma instrucao"
+                              : null,
                 ),
-                ElevatedButton(onPressed: onPressed, child: Text("Salvar")),
+                ElevatedButton(
+                  onPressed: () => onPressed(context),
+                  child: Text("Salvar"),
+                ),
               ],
             ),
           ),

@@ -4,9 +4,18 @@ import '/models/ingrediente.dart';
 class IngredienteRepository {
   static final DatabaseHelper _db = DatabaseHelper();
 
-  // Future<int> adicionar(Receita receita) async {
-  //   return _db.inserir("receita", receita.toMap());
-  // }
+  Future<int> adicionar(Ingrediente ingrediente) async {
+    return _db.inserir("ingrediente", ingrediente.toMap());
+  }
+
+  Future<int> editar(Ingrediente ingrediente) async {
+    return _db.editar(
+      "ingrediente",
+      ingrediente.toMap(),
+      condicao: 'id = ?',
+      conidcaoArgs: [ingrediente.id],
+    );
+  }
 
   Future<List<Ingrediente>> ingredientesReceita(String receitaId) async {
     var ingredientesNoBanco = await _db.obterTodos(
