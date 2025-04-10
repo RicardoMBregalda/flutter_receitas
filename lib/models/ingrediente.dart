@@ -3,7 +3,7 @@ import 'dart:convert';
 class Ingrediente {
   String id;
   String nome;
-  int quantidade;
+  String quantidade;
   String receitaId;
 
   Ingrediente({
@@ -26,7 +26,7 @@ class Ingrediente {
     return Ingrediente(
       id: map['id'] as String,
       nome: map['nome'] as String,
-      quantidade: map['quantidade'] as int,
+      quantidade: map['quantidade'] as String,
       receitaId: map['receitaId'] as String,
     );
   }

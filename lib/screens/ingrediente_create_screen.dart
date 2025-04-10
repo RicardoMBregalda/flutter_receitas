@@ -22,7 +22,7 @@ class _IngredienteCreateScreenState extends State<IngredienteCreateScreen> {
     var ingrediente = Ingrediente(
       id: Uuid().v4(),
       nome: _controllerNome.text,
-      quantidade: int.parse(_controllerQuantidade.text),
+      quantidade: _controllerQuantidade.text,
       receitaId: receita.id,
     );
     await IngredienteRepository().adicionar(ingrediente);

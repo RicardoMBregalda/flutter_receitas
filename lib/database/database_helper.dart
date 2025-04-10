@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'sqls/ingrediente_sql.dart';
 
 class DatabaseHelper {
-  static final String _nomeBancoDeDados = "bancolocal12.db";
+  static final String _nomeBancoDeDados = "banco_receitas.db";
   static final int _versaoBancoDeDados = 1;
   static late Database _bancoDeDados;
 

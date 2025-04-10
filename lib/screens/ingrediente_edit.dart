@@ -32,7 +32,7 @@ class _IngredienteEditScreenState extends State<IngredienteEditScreen> {
       Ingrediente ingredienteEditado = Ingrediente(
         id: ingrediente.id,
         nome: _controllerNome.text,
-        quantidade: int.parse(_controllerQuantidade.text),
+        quantidade: _controllerQuantidade.text,
         receitaId: ingrediente.receitaId,
       );
       await IngredienteRepository().editar(ingredienteEditado);

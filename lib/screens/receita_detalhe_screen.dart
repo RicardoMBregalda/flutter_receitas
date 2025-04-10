@@ -126,7 +126,7 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
                         ],
                       ),
                       title: Text(
-                        '${_ingredientes[index].nome} - ${_ingredientes[index].quantidade} unidade(s)',
+                        '${_ingredientes[index].nome} - ${_ingredientes[index].quantidade}',
                       ),
                     );
                   },
