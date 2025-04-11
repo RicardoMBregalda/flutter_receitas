@@ -164,9 +164,14 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             ElevatedButton.icon(
-              onPressed: criarInstrucao,
+              onPressed: criarIngrediente,
               icon: Icon(Icons.add),
               label: Text("Adicionar"),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
             ),
           ],
         ),
@@ -220,6 +225,11 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
               onPressed: criarInstrucao,
               icon: Icon(Icons.add),
               label: Text("Adicionar"),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
             ),
           ],
         ),
