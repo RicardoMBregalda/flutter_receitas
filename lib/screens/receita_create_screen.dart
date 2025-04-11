@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
+import 'package:receitas_trabalho_2/screens/receita_detalhe_screen.dart';
 import 'package:uuid/uuid.dart';
 
 import '/models/receita.dart';
@@ -16,15 +17,22 @@ class ReceitaCreateScreen extends StatelessWidget {
     final _formKey = GlobalKey<FormState>();
 
     void onPressed() async {
-      var receita = Receita(
-        nome: _controllerNome.text,
-        criadoEm: DateTime.now().toString(),
-        id: Uuid().v4(),
-        nota: int.parse(_controllerNota.text),
-        tempoPreparo: _controllerTempo.text,
-      );
-      await ReceitaRepository().adicionar(receita);
-      if (context.mounted) Navigator.pop(context);
+      if (_formKey.currentState!.validate()) {
+        var receita = Receita(
+          nome: _controllerNome.text,
+          criadoEm: DateTime.now().toString(),
+          id: Uuid().v4(),
+          nota: int.parse(_controllerNota.text),
+          tempoPreparo: _controllerTempo.text,
+        );
+        await ReceitaRepository().adicionar(receita);
+        if (context.mounted)
+          Navigator.pushReplacementNamed(
+            context,
+            ReceitaDetalheScreen.routeName,
+            arguments: receita,
+          );
+      }
     }
 
     return Scaffold(
