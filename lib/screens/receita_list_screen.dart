@@ -14,6 +14,7 @@ class ReceitaListScreen extends StatefulWidget {
 
 class _ReceitaListScreenState extends State<ReceitaListScreen> {
   List<Receita> _receitas = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -22,15 +23,47 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   }
 
   void _carregarReceitas() async {
-    final receitas = await ReceitaRepository().todasReceitas();
     setState(() {
-      _receitas = receitas;
+      _isLoading = true;
     });
+
+    final receitas = await ReceitaRepository().todasReceitas();
+
+    if (mounted) {
+      setState(() {
+        _receitas = receitas;
+        _isLoading = false;
+      });
+    }
   }
 
   void removerReceita(Receita receita) async {
-    await ReceitaRepository().remover(receita);
-    _carregarReceitas();
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Confirmar exclusão'),
+            content: Text(
+              'Deseja realmente excluir a receita "${receita.nome}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text('Excluir'),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmar == true) {
+      await ReceitaRepository().remover(receita);
+      _carregarReceitas();
+    }
   }
 
   void editarReceita(Receita receita) async {
@@ -43,49 +76,135 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     _carregarReceitas();
   }
 
+  void criarReceita() {
+    final _receita = Navigator.pushNamed(
+      context,
+      ReceitaCreateScreen.routeName,
+    ).then((_) => _carregarReceitas());
+  }
+
+  void verDetalhes(Receita receita) {
+    Navigator.pushNamed(
+      context,
+      ReceitaDetalheScreen.routeName,
+      arguments: receita,
+    ).then((_) => _carregarReceitas());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Receitas')),
-      body: Center(
-        child: ListView.builder(
-          itemCount: _receitas.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () => editarReceita(_receitas[index]),
-                    icon: Icon(Icons.edit),
-                  ),
-                  IconButton(
-                    onPressed: () => removerReceita(_receitas[index]),
-                    icon: Icon(Icons.delete),
-                  ),
-                ],
-              ),
-              title: Text(_receitas[index].nome),
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  ReceitaDetalheScreen.routeName,
-                  arguments: _receitas[index],
-                );
-              },
-            );
-          },
-        ),
+      appBar: AppBar(title: const Text('Minhas Receitas'), elevation: 2),
+      body:
+          _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : _receitas.isEmpty
+              ? _buildEmptyState()
+              : _buildReceitasList(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: criarReceita,
+        icon: const Icon(Icons.add),
+        label: const Text('Nova Receita'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          Navigator.pushNamed(context, ReceitaCreateScreen.routeName).then(
-            (_) => setState(() {
-              _carregarReceitas();
-            }),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.restaurant, size: 80, color: Colors.grey[400]),
+          SizedBox(height: 16),
+          Text(
+            'Nenhuma receita encontrada',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Clique no botão abaixo para adicionar sua primeira receita!',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: criarReceita,
+            icon: Icon(Icons.add),
+            label: Text('Adicionar Receita'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReceitasList() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ListView.builder(
+        itemCount: _receitas.length,
+        itemBuilder: (context, index) {
+          final receita = _receitas[index];
+          return Card(
+            elevation: 2,
+            margin: EdgeInsets.only(bottom: 12),
+            child: InkWell(
+              onTap: () => verDetalhes(receita),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            receita.nome,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () => editarReceita(receita),
+                              icon: Icon(Icons.edit),
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              onPressed: () => removerReceita(receita),
+                              icon: Icon(Icons.delete),
+                              tooltip: 'Excluir',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.star, size: 16),
+                        SizedBox(width: 4),
+                        Text('${receita.nota}'),
+                        SizedBox(width: 16),
+                        Icon(Icons.timer, size: 16),
+                        SizedBox(width: 4),
+                        Text(receita.tempoPreparo),
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
