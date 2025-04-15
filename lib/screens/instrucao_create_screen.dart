@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 class InstrucaoCreateScreen extends StatefulWidget {
   const InstrucaoCreateScreen({super.key});
   static const String routeName = '/intrucao-create';
+
   @override
   _InstrucaoCreateScreenState createState() => _InstrucaoCreateScreenState();
 }
@@ -16,42 +17,69 @@ class _InstrucaoCreateScreenState extends State<InstrucaoCreateScreen> {
   final _formKey = GlobalKey<FormState>();
 
   void onPressed(BuildContext context, Receita receita) async {
-    var instrucao = Instrucao(
-      id: Uuid().v4(),
-      instrucao: _controllerInstrucao.text,
-      receitaId: receita.id,
-    );
-    await InstrucaoRepository().adicionar(instrucao);
-    if (context.mounted) Navigator.pop(context);
+    if (_formKey.currentState!.validate()) {
+      var instrucao = Instrucao(
+        id: const Uuid().v4(),
+        instrucao: _controllerInstrucao.text,
+        receitaId: receita.id,
+      );
+      await InstrucaoRepository().adicionar(instrucao);
+      if (context.mounted) Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final receita = ModalRoute.of(context)!.settings.arguments as Receita;
     return Scaffold(
-      appBar: AppBar(title: const Text('Adicionar Instrução')),
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Instrução',
-                    border: OutlineInputBorder(),
+      appBar: AppBar(title: const Text('Adicionar Instrução'), elevation: 0),
+      body: Container(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Passo a Passo',
+                  hintText: 'Descreva a instrução para esta receita',
+                  prefixIcon: Icon(Icons.format_list_numbered),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
                   ),
-                  controller: _controllerInstrucao,
                 ),
-                SizedBox(height: 12),
-                ElevatedButton.icon(
-                  onPressed: () => onPressed(context, receita),
-                  icon: Icon(Icons.add),
-                  label: Text("Adicionar Instrucao"),
+                controller: _controllerInstrucao,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira a instrução';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton.icon(
+                onPressed: () => onPressed(context, receita),
+                icon: const Icon(Icons.add),
+                label: const Text(
+                  "ADICIONAR INSTRUÇÃO",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-              ],
-            ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text("VOLTAR"),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+              ),
+            ],
           ),
         ),
       ),

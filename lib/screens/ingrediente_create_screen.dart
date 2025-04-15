@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:receitas_trabalho_2/models/ingrediente.dart';
 import 'package:receitas_trabalho_2/models/receita.dart';
 import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
-import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class IngredienteCreateScreen extends StatefulWidget {
   const IngredienteCreateScreen({super.key});
   static const String routeName = '/ingrediente-create';
+
   @override
   _IngredienteCreateScreenState createState() =>
       _IngredienteCreateScreenState();
@@ -19,53 +19,88 @@ class _IngredienteCreateScreenState extends State<IngredienteCreateScreen> {
   final _formKey = GlobalKey<FormState>();
 
   void onPressed(BuildContext context, Receita receita) async {
-    var ingrediente = Ingrediente(
-      id: Uuid().v4(),
-      nome: _controllerNome.text,
-      quantidade: _controllerQuantidade.text,
-      receitaId: receita.id,
-    );
-    await IngredienteRepository().adicionar(ingrediente);
-    if (context.mounted) Navigator.pop(context);
+    if (_formKey.currentState!.validate()) {
+      var ingrediente = Ingrediente(
+        id: const Uuid().v4(),
+        nome: _controllerNome.text,
+        quantidade: _controllerQuantidade.text,
+        receitaId: receita.id,
+      );
+      await IngredienteRepository().adicionar(ingrediente);
+      if (context.mounted) Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final receita = ModalRoute.of(context)!.settings.arguments as Receita;
     return Scaffold(
-      appBar: AppBar(title: const Text('Adicionar Ingrediente')),
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Nome',
-                    border: OutlineInputBorder(),
-                  ),
-                  controller: _controllerNome,
-                ),
-                SizedBox(height: 12),
+      appBar: AppBar(title: const Text('Adicionar Ingrediente'), elevation: 0),
+      body: Container(
+        padding: const EdgeInsets.all(20),
 
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Quantidade',
-                    border: OutlineInputBorder(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Nome do Ingrediente',
+                  prefixIcon: Icon(Icons.restaurant),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
                   ),
-                  controller: _controllerQuantidade,
                 ),
-                SizedBox(height: 12),
+                controller: _controllerNome,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira o nome do ingrediente';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Quantidade',
+                  prefixIcon: Icon(Icons.scale),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                  ),
+                ),
+                controller: _controllerQuantidade,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, insira a quantidade';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton.icon(
+                onPressed: () => onPressed(context, receita),
+                icon: const Icon(Icons.add),
+                label: const Text(
+                  "ADICIONAR INGREDIENTE",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
 
-                ElevatedButton.icon(
-                  onPressed: () => onPressed(context, receita),
-                  icon: Icon(Icons.add),
-                  label: Text("Adicionar Ingrediente"),
-                ),
-              ],
-            ),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back),
+                label: const Text("VOLTAR"),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+              ),
+            ],
           ),
         ),
       ),
