@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
+import 'package:receitas_trabalho_2/screens/receita_detalhe_screen.dart';
 import 'package:uuid/uuid.dart';
 import '/models/receita.dart';
 
@@ -35,7 +36,11 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
         tempoPreparo: _controllerTempo.text,
       );
       await ReceitaRepository().adicionar(receita);
-      if (context.mounted) Navigator.pop(context);
+      Navigator.pushReplacementNamed(
+        context,
+        ReceitaDetalheScreen.routeName,
+        arguments: receita,
+      );
     }
   }
 
