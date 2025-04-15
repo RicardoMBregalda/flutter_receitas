@@ -60,9 +60,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
                     labelText: 'Nome da Receita',
                     hintText: 'Ex: Bolo de Chocolate',
                     prefixIcon: Icon(Icons.restaurant_menu),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                    ),
                   ),
                   controller: _controllerNome,
                   validator:
@@ -78,9 +75,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
                     labelText: 'Nota (1-5)',
                     hintText: 'Avalie de 1 a 5',
                     prefixIcon: Icon(Icons.star),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                    ),
                   ),
                   controller: _controllerNota,
                   keyboardType: TextInputType.number,
@@ -102,9 +96,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
                     labelText: 'Tempo de Preparo',
                     hintText: 'Ex: 45 minutos',
                     prefixIcon: Icon(Icons.timer),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                    ),
                   ),
                   controller: _controllerTempo,
                   validator:

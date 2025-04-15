@@ -48,9 +48,6 @@ class _IngredienteCreateScreenState extends State<IngredienteCreateScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Nome do Ingrediente',
                   prefixIcon: Icon(Icons.restaurant),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
                 ),
                 controller: _controllerNome,
                 validator: (value) {
@@ -65,9 +62,6 @@ class _IngredienteCreateScreenState extends State<IngredienteCreateScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Quantidade',
                   prefixIcon: Icon(Icons.scale),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
                 ),
                 controller: _controllerQuantidade,
                 validator: (value) {

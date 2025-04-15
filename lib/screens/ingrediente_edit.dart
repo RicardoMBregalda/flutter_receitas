@@ -57,9 +57,6 @@ class _IngredienteEditScreenState extends State<IngredienteEditScreen> {
                   labelText: 'Nome do Ingrediente',
                   hintText: 'Ex: Farinha de trigo',
                   prefixIcon: Icon(Icons.restaurant),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
                 ),
                 controller: _controllerNome,
                 validator:
@@ -74,9 +71,6 @@ class _IngredienteEditScreenState extends State<IngredienteEditScreen> {
                   labelText: 'Quantidade',
                   hintText: 'Ex: 2 xícaras',
                   prefixIcon: Icon(Icons.scale),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
                 ),
                 controller: _controllerQuantidade,
                 validator:

@@ -50,11 +50,11 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
                 child: Text('Cancelar'),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
                 child: Text('Excluir'),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
               ),
             ],
           ),

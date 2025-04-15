@@ -45,9 +45,6 @@ class _InstrucaoCreateScreenState extends State<InstrucaoCreateScreen> {
                   labelText: 'Passo a Passo',
                   hintText: 'Descreva a instrução para esta receita',
                   prefixIcon: Icon(Icons.format_list_numbered),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
                 ),
                 controller: _controllerInstrucao,
                 validator: (value) {

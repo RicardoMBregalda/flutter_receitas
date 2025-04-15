@@ -51,9 +51,6 @@ class _InstrucaoEditScreenState extends State<InstrucaoEditScreen> {
                   labelText: 'Passo a Passo',
                   hintText: 'Descreva detalhadamente esta etapa da receita',
                   prefixIcon: Icon(Icons.edit_note),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
-                  ),
                 ),
                 controller: _controllerInstrucao,
                 validator:

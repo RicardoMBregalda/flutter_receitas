@@ -56,9 +56,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
                     labelText: 'Nome da Receita',
                     hintText: 'Ex: Risoto de Funghi',
                     prefixIcon: Icon(Icons.restaurant_menu),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                    ),
                   ),
                   controller: _controllerNome,
                   validator:
@@ -74,9 +71,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
                     labelText: 'Nota (1-5)',
                     hintText: 'Avalie de 1 a 5',
                     prefixIcon: Icon(Icons.star_rate),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                    ),
                   ),
                   controller: _controllerNota,
                   keyboardType: TextInputType.number,
@@ -98,9 +92,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
                     labelText: 'Tempo de Preparo',
                     hintText: 'Ex: 30 minutos',
                     prefixIcon: Icon(Icons.timer),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(16)),
-                    ),
                   ),
                   controller: _controllerTempo,
                   validator:
