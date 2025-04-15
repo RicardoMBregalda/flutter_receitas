@@ -49,7 +49,10 @@ class _IngredienteEditScreenState extends State<IngredienteEditScreen> {
             child: Column(
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Nome'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerNome,
                   validator:
                       (value) =>
@@ -57,8 +60,13 @@ class _IngredienteEditScreenState extends State<IngredienteEditScreen> {
                               ? "Insira um nome"
                               : null,
                 ),
+                SizedBox(height: 12),
+
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Quantidade'),
+                  decoration: const InputDecoration(
+                    labelText: 'Quantidade',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerQuantidade,
                   validator:
                       (value) =>
@@ -66,9 +74,12 @@ class _IngredienteEditScreenState extends State<IngredienteEditScreen> {
                               ? "Insira uma quantidade"
                               : null,
                 ),
-                ElevatedButton(
+                SizedBox(height: 12),
+
+                ElevatedButton.icon(
                   onPressed: () => onPressed(context),
-                  child: Text("Salvar"),
+                  icon: Icon(Icons.save),
+                  label: Text("Salvar Ingrediente"),
                 ),
               ],
             ),

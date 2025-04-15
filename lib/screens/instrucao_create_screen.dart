@@ -38,12 +38,17 @@ class _InstrucaoCreateScreenState extends State<InstrucaoCreateScreen> {
             child: Column(
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Instrução'),
+                  decoration: const InputDecoration(
+                    labelText: 'Instrução',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerInstrucao,
                 ),
-                ElevatedButton(
+                SizedBox(height: 12),
+                ElevatedButton.icon(
                   onPressed: () => onPressed(context, receita),
-                  child: Text("Adicionar"),
+                  icon: Icon(Icons.add),
+                  label: Text("Adicionar Instrucao"),
                 ),
               ],
             ),

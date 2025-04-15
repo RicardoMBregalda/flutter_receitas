@@ -50,7 +50,10 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
             child: Column(
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Nome'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerNome,
                   validator:
                       (value) =>
@@ -58,8 +61,13 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
                               ? "Insira um nome"
                               : null,
                 ),
+                SizedBox(height: 12),
+
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Nota'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nota',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerNota,
                   validator:
                       (value) =>
@@ -67,9 +75,12 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
                               ? "Insira uma nota"
                               : null,
                 ),
+                SizedBox(height: 12),
+
                 TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Tempo de Preparo',
+                    border: OutlineInputBorder(),
                   ),
                   controller: _controllerTempo,
                   validator:
@@ -78,9 +89,12 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
                               ? "Insira um tempo de preparo"
                               : null,
                 ),
-                ElevatedButton(
+                SizedBox(height: 12),
+
+                ElevatedButton.icon(
                   onPressed: () => onPressed(context),
-                  child: Text("Salvar"),
+                  icon: Icon(Icons.save),
+                  label: Text("Salvar Receita"),
                 ),
               ],
             ),

@@ -42,16 +42,27 @@ class _IngredienteCreateScreenState extends State<IngredienteCreateScreen> {
             child: Column(
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Nome'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerNome,
                 ),
+                SizedBox(height: 12),
+
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Quantidade'),
+                  decoration: const InputDecoration(
+                    labelText: 'Quantidade',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerQuantidade,
                 ),
-                ElevatedButton(
+                SizedBox(height: 12),
+
+                ElevatedButton.icon(
                   onPressed: () => onPressed(context, receita),
-                  child: Text("Adicionar"),
+                  icon: Icon(Icons.add),
+                  label: Text("Adicionar Ingrediente"),
                 ),
               ],
             ),

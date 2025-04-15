@@ -44,7 +44,10 @@ class _InstrucaoEditScreenState extends State<InstrucaoEditScreen> {
             child: Column(
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Instrucao'),
+                  decoration: const InputDecoration(
+                    labelText: 'Instrucao',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerInstrucao,
                   validator:
                       (value) =>
@@ -52,9 +55,12 @@ class _InstrucaoEditScreenState extends State<InstrucaoEditScreen> {
                               ? "Insira uma instrucao"
                               : null,
                 ),
-                ElevatedButton(
+                SizedBox(height: 12),
+
+                ElevatedButton.icon(
                   onPressed: () => onPressed(context),
-                  child: Text("Salvar"),
+                  icon: Icon(Icons.save),
+                  label: Text("Salvar Instrução"),
                 ),
               ],
             ),

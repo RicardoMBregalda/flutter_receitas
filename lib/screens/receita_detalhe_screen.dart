@@ -164,7 +164,7 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             ElevatedButton.icon(
-              onPressed: criarInstrucao,
+              onPressed: criarIngrediente,
               icon: Icon(Icons.add),
               label: Text("Adicionar"),
             ),

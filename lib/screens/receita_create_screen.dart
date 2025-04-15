@@ -28,16 +28,19 @@ class ReceitaCreateScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Criar Receita')),
+      appBar: AppBar(title: const Text('Criação de uma Receita')),
       body: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
             child: Column(
               children: [
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Nome'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerNome,
                   validator:
                       (value) =>
@@ -45,8 +48,12 @@ class ReceitaCreateScreen extends StatelessWidget {
                               ? "Insira um nome"
                               : null,
                 ),
+                SizedBox(height: 12),
                 TextFormField(
-                  decoration: const InputDecoration(labelText: 'Nota'),
+                  decoration: const InputDecoration(
+                    labelText: 'Nota',
+                    border: OutlineInputBorder(),
+                  ),
                   controller: _controllerNota,
                   validator:
                       (value) =>
@@ -54,9 +61,11 @@ class ReceitaCreateScreen extends StatelessWidget {
                               ? "Insira uma nota"
                               : null,
                 ),
+                SizedBox(height: 12),
                 TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Tempo de Preparo',
+                    border: OutlineInputBorder(),
                   ),
                   controller: _controllerTempo,
                   validator:
@@ -65,7 +74,12 @@ class ReceitaCreateScreen extends StatelessWidget {
                               ? "Insira um tempo de preparo"
                               : null,
                 ),
-                ElevatedButton(onPressed: onPressed, child: Text("Criar")),
+                SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: onPressed,
+                  label: Text("Adicionar Receita"),
+                  icon: Icon(Icons.add),
+                ),
               ],
             ),
           ),
