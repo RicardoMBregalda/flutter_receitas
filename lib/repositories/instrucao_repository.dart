@@ -1,5 +1,4 @@
-import 'package:receitas_trabalho_2/models/receita.dart';
-
+import '/models/receita.dart';
 import '/database/database_helper.dart';
 import '/models/instrucao.dart';
 

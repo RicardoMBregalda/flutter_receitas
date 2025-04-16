@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
+import '/repositories/instrucao_repository.dart';
 import '/models/instrucao.dart';
 
 class InstrucaoEditScreen extends StatefulWidget {
@@ -7,6 +7,7 @@ class InstrucaoEditScreen extends StatefulWidget {
   static const String routeName = '/instrucao-edit';
 
   @override
+  // ignore: library_private_types_in_public_api
   _InstrucaoEditScreenState createState() => _InstrucaoEditScreenState();
 }
 

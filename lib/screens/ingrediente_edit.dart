@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
+import '/repositories/ingrediente_repository.dart';
 import '/models/ingrediente.dart';
 
 class IngredienteEditScreen extends StatefulWidget {
@@ -7,6 +7,7 @@ class IngredienteEditScreen extends StatefulWidget {
   static const String routeName = '/ingrediente-edit';
 
   @override
+  // ignore: library_private_types_in_public_api
   _IngredienteEditScreenState createState() => _IngredienteEditScreenState();
 }
 

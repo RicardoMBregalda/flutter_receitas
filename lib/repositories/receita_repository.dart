@@ -1,5 +1,5 @@
-import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
-import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
+import '/repositories/ingrediente_repository.dart';
+import '/repositories/instrucao_repository.dart';
 import '/database/database_helper.dart';
 import '/models/receita.dart';
 

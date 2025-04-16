@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/models/instrucao.dart';
-import 'package:receitas_trabalho_2/models/receita.dart';
-import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
+import '/models/instrucao.dart';
+import '/models/receita.dart';
+import '/repositories/instrucao_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class InstrucaoCreateScreen extends StatefulWidget {
@@ -9,6 +9,7 @@ class InstrucaoCreateScreen extends StatefulWidget {
   static const String routeName = '/intrucao-create';
 
   @override
+  // ignore: library_private_types_in_public_api
   _InstrucaoCreateScreenState createState() => _InstrucaoCreateScreenState();
 }
 

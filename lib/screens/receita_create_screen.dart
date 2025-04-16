@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
-import 'package:receitas_trabalho_2/screens/receita_detalhe_screen.dart';
+import '/repositories/receita_repository.dart';
+import '/screens/receita_detalhe_screen.dart';
 import 'package:uuid/uuid.dart';
 import '/models/receita.dart';
 

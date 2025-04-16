@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/models/ingrediente.dart';
-import 'package:receitas_trabalho_2/models/receita.dart';
-import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
+import '/models/ingrediente.dart';
+import '/models/receita.dart';
+import '/repositories/ingrediente_repository.dart';
 import 'package:uuid/uuid.dart';
 
 class IngredienteCreateScreen extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
+import '/screens/receita_edit_screen.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';

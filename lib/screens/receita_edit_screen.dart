@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
+import '/repositories/receita_repository.dart';
 import '/models/receita.dart';
 
 class ReceitaEditScreen extends StatefulWidget {

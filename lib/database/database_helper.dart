@@ -1,6 +1,6 @@
 import 'package:path/path.dart';
-import 'package:receitas_trabalho_2/database/sqls/instrucao_sql.dart';
-import 'package:receitas_trabalho_2/database/sqls/receita_sql.dart';
+import '/database/sqls/instrucao_sql.dart';
+import '/database/sqls/receita_sql.dart';
 import 'package:sqflite/sqflite.dart';
 import 'sqls/ingrediente_sql.dart';
 
