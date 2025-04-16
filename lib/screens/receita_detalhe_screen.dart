@@ -218,7 +218,7 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
 
           children: [
             Text(
-              "Instrucoes",
+              "Instruções",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             ElevatedButton.icon(
