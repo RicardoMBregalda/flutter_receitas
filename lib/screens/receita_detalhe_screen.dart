@@ -67,7 +67,22 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
       context,
       IngredienteEditScreen.routeName,
       arguments: ingrediente,
-    ).then((_) => _carregarDados());
+    ).then((_) => {_carregarDados()});
+  }
+
+  void editarReceita() {
+    Navigator.pushNamed(
+      context,
+      ReceitaEditScreen.routeName,
+      arguments: _receita,
+    ).then((resultado) {
+      if (resultado != null && resultado is Receita) {
+        setState(() {
+          _receita = resultado;
+        });
+        _carregarDados();
+      }
+    });
   }
 
   void editarInstrucao(Instrucao instrucao) {
@@ -128,7 +143,16 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
                   _receita.nome,
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                // ElevatedButton(onPressed: () {}, child: Icon(Icons.edit)),
+                ElevatedButton.icon(
+                  onPressed: editarReceita,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: Icon(Icons.edit),
+                  label: Text("Editar"),
+                ),
               ],
             ),
 
@@ -254,7 +278,7 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
                     ),
                   ],
                 ),
-                title: Text(_instrucoes[index].instrucao),
+                title: Text("${index + 1} - ${_instrucoes[index].instrucao}"),
               );
             },
           ),

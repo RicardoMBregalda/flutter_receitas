@@ -41,4 +41,11 @@ class ReceitaRepository {
 
     return listaDeReceitas;
   }
+
+  Future<int> quantidadeIngredientes(Receita receita) async {
+    var listaDeIngredientes = await IngredienteRepository().ingredientesReceita(
+      receita.id,
+    );
+    return listaDeIngredientes.length;
+  }
 }

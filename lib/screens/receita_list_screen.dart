@@ -14,6 +14,7 @@ class ReceitaListScreen extends StatefulWidget {
 
 class _ReceitaListScreenState extends State<ReceitaListScreen> {
   List<Receita> _receitas = [];
+  List<int> _quantidadeIngredientes = [];
   bool _isLoading = true;
 
   @override
@@ -28,10 +29,20 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     });
 
     final receitas = await ReceitaRepository().todasReceitas();
+    if (receitas.isNotEmpty) {
+      _quantidadeIngredientes = [];
+      for (var receita in receitas) {
+        var quantidade = await ReceitaRepository().quantidadeIngredientes(
+          receita,
+        );
+        _quantidadeIngredientes.add(quantidade);
+      }
+    }
 
     if (mounted) {
       setState(() {
         _receitas = receitas;
+        _quantidadeIngredientes = _quantidadeIngredientes;
         _isLoading = false;
       });
     }
@@ -49,8 +60,8 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text('Cancelar'),
                 style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                child: Text('Cancelar'),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
@@ -89,6 +100,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
       ReceitaDetalheScreen.routeName,
       arguments: receita,
     ).then((_) => _carregarReceitas());
+    _carregarReceitas();
   }
 
   @override
@@ -148,6 +160,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         itemCount: _receitas.length,
         itemBuilder: (context, index) {
           final receita = _receitas[index];
+          final quantidade = _quantidadeIngredientes[index];
           return Card(
             elevation: 2,
             margin: EdgeInsets.only(bottom: 12),
@@ -196,6 +209,10 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
                         Icon(Icons.timer, size: 16),
                         SizedBox(width: 4),
                         Text(receita.tempoPreparo),
+                        SizedBox(width: 16),
+                        Icon(Icons.restaurant, size: 16),
+                        SizedBox(width: 4),
+                        Text('${quantidade.toString()} ingredientes'),
                       ],
                     ),
                     SizedBox(height: 8),
