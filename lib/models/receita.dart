@@ -6,6 +6,7 @@ class Receita {
   int nota;
   String criadoEm;
   String tempoPreparo;
+  int? quantidadeIngredientes;
 
   Receita({
     required this.id,

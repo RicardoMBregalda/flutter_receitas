@@ -15,7 +15,6 @@ class ReceitaListScreen extends StatefulWidget {
 
 class _ReceitaListScreenState extends State<ReceitaListScreen> {
   List<Receita> _receitas = [];
-  List<int> _quantidadeIngredientes = [];
   bool _isLoading = true;
 
   @override
@@ -28,22 +27,10 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     setState(() {
       _isLoading = true;
     });
-
     final receitas = await ReceitaRepository().todasReceitas();
-    if (receitas.isNotEmpty) {
-      _quantidadeIngredientes = [];
-      for (var receita in receitas) {
-        var quantidade = await ReceitaRepository().quantidadeIngredientes(
-          receita,
-        );
-        _quantidadeIngredientes.add(quantidade);
-      }
-    }
-
     if (mounted) {
       setState(() {
         _receitas = receitas;
-        _quantidadeIngredientes = _quantidadeIngredientes;
         _isLoading = false;
       });
     }
@@ -88,19 +75,24 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     _carregarReceitas();
   }
 
-  void criarReceita() {
-    Navigator.pushNamed(
+  void criarReceita() async {
+    final result = await Navigator.pushNamed(
       context,
       ReceitaCreateScreen.routeName,
-    ).then((_) => _carregarReceitas());
+    );
+    _carregarReceitas();
+
+    if (result is Receita && mounted) {
+      verDetalhes(result);
+    }
   }
 
-  void verDetalhes(Receita receita) {
-    Navigator.pushNamed(
+  void verDetalhes(Receita receita) async {
+    await Navigator.pushNamed(
       context,
       ReceitaDetalheScreen.routeName,
       arguments: receita,
-    ).then((_) => _carregarReceitas());
+    );
     _carregarReceitas();
   }
 
@@ -161,7 +153,6 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         itemCount: _receitas.length,
         itemBuilder: (context, index) {
           final receita = _receitas[index];
-          final quantidade = _quantidadeIngredientes[index];
           return Card(
             elevation: 2,
             margin: EdgeInsets.only(bottom: 12),
@@ -213,7 +204,9 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
                         SizedBox(width: 16),
                         Icon(Icons.restaurant, size: 16),
                         SizedBox(width: 4),
-                        Text('${quantidade.toString()} ingredientes'),
+                        Text(
+                          '${receita.quantidadeIngredientes.toString()} ingredientes',
+                        ),
                       ],
                     ),
                     SizedBox(height: 8),

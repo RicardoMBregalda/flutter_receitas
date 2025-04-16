@@ -34,7 +34,10 @@ class ReceitaRepository {
     List<Receita> listaDeReceitas = [];
 
     for (var i = 0; i < receitasNoBanco.length; i++) {
-      listaDeReceitas.add(Receita.fromMap(receitasNoBanco[i]));
+      var receita = Receita.fromMap(receitasNoBanco[i]);
+      receita.quantidadeIngredientes = await ReceitaRepository()
+          .quantidadeIngredientes(receita);
+      listaDeReceitas.add(receita);
     }
 
     return listaDeReceitas;
