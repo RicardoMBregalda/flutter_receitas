@@ -9,6 +9,7 @@ class ReceitaListScreen extends StatefulWidget {
   const ReceitaListScreen({super.key});
   static const routeName = '/receita';
   @override
+  // ignore: library_private_types_in_public_api
   _ReceitaListScreenState createState() => _ReceitaListScreenState();
 }
 

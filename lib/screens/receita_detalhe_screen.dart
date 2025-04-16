@@ -14,6 +14,7 @@ class ReceitaDetalheScreen extends StatefulWidget {
   const ReceitaDetalheScreen({super.key});
   static const routeName = '/receita_detalhe';
   @override
+  // ignore: library_private_types_in_public_api
   _ReceitaDetalheScreenState createState() => _ReceitaDetalheScreenState();
 }
 

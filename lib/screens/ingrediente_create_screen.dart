@@ -9,6 +9,7 @@ class IngredienteCreateScreen extends StatefulWidget {
   static const String routeName = '/ingrediente-create';
 
   @override
+  // ignore: library_private_types_in_public_api
   _IngredienteCreateScreenState createState() =>
       _IngredienteCreateScreenState();
 }

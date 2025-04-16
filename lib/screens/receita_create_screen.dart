@@ -36,6 +36,7 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
         tempoPreparo: _controllerTempo.text,
       );
       await ReceitaRepository().adicionar(receita);
+      if (!mounted) return;
       Navigator.pushReplacementNamed(
         context,
         ReceitaDetalheScreen.routeName,

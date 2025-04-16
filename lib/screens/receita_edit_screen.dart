@@ -7,6 +7,7 @@ class ReceitaEditScreen extends StatefulWidget {
   static const String routeName = '/receita-edit';
 
   @override
+  // ignore: library_private_types_in_public_api
   _ReceitaEditScreenState createState() => _ReceitaEditScreenState();
 }
 
