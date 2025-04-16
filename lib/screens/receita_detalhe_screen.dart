@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:logger/web.dart';
 import '/repositories/ingrediente_repository.dart';
 import '/repositories/instrucao_repository.dart';
 import '/screens/ingrediente_create_screen.dart';

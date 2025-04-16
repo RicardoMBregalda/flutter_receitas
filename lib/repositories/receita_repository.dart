@@ -1,7 +1,5 @@
 import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
 import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
-import 'package:uuid/uuid.dart';
-
 import '/database/database_helper.dart';
 import '/models/receita.dart';
 
