@@ -1,9 +1,19 @@
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:receitas_trabalho_2/models/ingrediente.dart';
+import 'package:receitas_trabalho_2/models/instrucao.dart';
+import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
+import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
+import 'package:uuid/uuid.dart';
 import '/screens/receita_edit_screen.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
 import '../repositories/receita_repository.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+import 'package:http/http.dart' as http;
 
 class ReceitaListScreen extends StatefulWidget {
   const ReceitaListScreen({super.key});
@@ -16,11 +26,63 @@ class ReceitaListScreen extends StatefulWidget {
 class _ReceitaListScreenState extends State<ReceitaListScreen> {
   List<Receita> _receitas = [];
   bool _isLoading = true;
+  final _key = GlobalKey<ExpandableFabState>();
 
   @override
   void initState() {
     super.initState();
     _carregarReceitas();
+  }
+
+  Future<void> criarReceitaAleatoria() async {
+    final url = Uri.parse(
+      'https://randommer.io/api/Text/LoremIpsum?loremType=normal&type=paragraphs&number=5',
+    );
+
+    final response = await http.get(
+      url,
+      headers: {'accept': '*/*', 'X-Api-Key': dotenv.env['API_KEY'] ?? ''},
+    );
+
+    if (response.statusCode == 200) {
+      String texto = jsonDecode(response.body) as String;
+      List<String> palavras = texto.split(' ');
+      int tempo = Random().nextInt(30) + 1;
+
+      var receita = Receita(
+        nome: palavras[Random().nextInt(palavras.length)],
+        criadoEm: DateTime.now().toString(),
+        id: const Uuid().v4(),
+        nota: Random().nextInt(5),
+        tempoPreparo: tempo < 6 ? '$tempo horas' : '$tempo minutos',
+      );
+
+      await ReceitaRepository().adicionar(receita);
+
+      var quantidadeIngredientes = Random().nextInt(4) + 1;
+      var quantidadeInstrucoes = Random().nextInt(4) + 1;
+
+      for (var i = 0; i < quantidadeIngredientes; i++) {
+        await IngredienteRepository().adicionar(
+          Ingrediente(
+            id: const Uuid().v4(),
+            nome: palavras[Random().nextInt(palavras.length)],
+            quantidade: '${Random().nextInt(1000)} g',
+            receitaId: receita.id,
+          ),
+        );
+      }
+
+      for (var i = 0; i < quantidadeInstrucoes; i++) {
+        await InstrucaoRepository().adicionar(
+          Instrucao(
+            id: const Uuid().v4(),
+            instrucao: palavras[Random().nextInt(palavras.length)],
+            receitaId: receita.id,
+          ),
+        );
+      }
+    }
   }
 
   void _carregarReceitas() async {
@@ -106,10 +168,43 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
               : _receitas.isEmpty
               ? _buildEmptyState()
               : _buildReceitasList(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: criarReceita,
-        icon: const Icon(Icons.add),
-        label: const Text('Nova Receita'),
+
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+        key: _key,
+        openButtonBuilder: RotateFloatingActionButtonBuilder(
+          child: const Icon(Icons.add),
+          fabSize: ExpandableFabSize.regular,
+        ),
+        closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+          child: const Icon(Icons.close),
+          fabSize: ExpandableFabSize.small,
+        ),
+        children: [
+          FloatingActionButton(
+            heroTag: null,
+            child: const Icon(Icons.add),
+            onPressed: () {
+              final state = _key.currentState;
+              if (state != null) {
+                criarReceita();
+                state.toggle();
+              }
+            },
+          ),
+          FloatingActionButton(
+            heroTag: null,
+            child: const Icon(Icons.question_mark),
+            onPressed: () async {
+              final state = _key.currentState;
+              if (state != null) {
+                await criarReceitaAleatoria();
+                _carregarReceitas();
+                state.toggle();
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -128,18 +223,6 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
               fontWeight: FontWeight.bold,
               color: Colors.grey[600],
             ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Clique no botão abaixo para adicionar sua primeira receita!',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-          SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: criarReceita,
-            icon: Icon(Icons.add),
-            label: Text('Adicionar Receita'),
           ),
         ],
       ),

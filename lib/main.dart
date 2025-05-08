@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '/screens/ingrediente_create_screen.dart';
 import '/screens/instrucao_create_screen.dart';
 import '/screens/ingrediente_edit.dart';
@@ -8,7 +9,8 @@ import '/screens/receita_detalhe_screen.dart';
 import '/screens/receita_edit_screen.dart';
 import '/screens/receita_list_screen.dart';
 
-void main() {
+void main() async {
+  await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MainApp());
 }
