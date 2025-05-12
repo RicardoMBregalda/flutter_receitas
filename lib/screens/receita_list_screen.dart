@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/models/ingrediente.dart';
-import 'package:receitas_trabalho_2/models/instrucao.dart';
-import 'package:receitas_trabalho_2/repositories/ingrediente_repository.dart';
-import 'package:receitas_trabalho_2/repositories/instrucao_repository.dart';
+import '/models/ingrediente.dart';
+import '/models/instrucao.dart';
+import '/repositories/ingrediente_repository.dart';
+import '/repositories/instrucao_repository.dart';
 import 'package:uuid/uuid.dart';
 import '/screens/receita_edit_screen.dart';
 import '/models/receita.dart';
@@ -34,6 +34,10 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     _carregarReceitas();
   }
 
+  String removePontosEVirgulas(String palavra) {
+    return palavra.replaceAll(',', '').replaceAll('.', '');
+  }
+
   Future<void> criarReceitaAleatoria() async {
     final url = Uri.parse(
       'https://randommer.io/api/Text/LoremIpsum?loremType=normal&type=paragraphs&number=5',
@@ -50,7 +54,9 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
       int tempo = Random().nextInt(30) + 1;
 
       var receita = Receita(
-        nome: palavras[Random().nextInt(palavras.length)],
+        nome: removePontosEVirgulas(
+          palavras[Random().nextInt(palavras.length)],
+        ),
         criadoEm: DateTime.now().toString(),
         id: const Uuid().v4(),
         nota: Random().nextInt(5),
@@ -66,7 +72,9 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         await IngredienteRepository().adicionar(
           Ingrediente(
             id: const Uuid().v4(),
-            nome: palavras[Random().nextInt(palavras.length)],
+            nome: removePontosEVirgulas(
+              palavras[Random().nextInt(palavras.length)],
+            ),
             quantidade: '${Random().nextInt(1000)} g',
             receitaId: receita.id,
           ),
@@ -77,7 +85,9 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         await InstrucaoRepository().adicionar(
           Instrucao(
             id: const Uuid().v4(),
-            instrucao: palavras[Random().nextInt(palavras.length)],
+            instrucao: removePontosEVirgulas(
+              palavras[Random().nextInt(palavras.length)],
+            ),
             receitaId: receita.id,
           ),
         );
