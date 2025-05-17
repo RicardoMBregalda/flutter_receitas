@@ -8,7 +8,6 @@ Flutter Receitas
 
 </p>
 
-
 ## 🍽️ O que é o Flutter Receitas?
 
 Aplicativo Flutter multiplataforma para consulta e organização de receitas culinárias. Desenvolvido como parte de um projeto acadêmico com foco em boas práticas de programação, responsividade e experiência do usuário.
@@ -17,20 +16,20 @@ Aplicativo Flutter multiplataforma para consulta e organização de receitas cul
 
 ## ✨ Funcionalidades
 
-- 🔍 Buscar receitas por nome  
-- 📋 Visualizar detalhes da receita (ingredientes, modo de preparo)  
-- ❤️ Marcar receitas favoritas  
-- 📱 Interface responsiva adaptada para Android, iOS  
-- 🧪 Código limpo e modular com boas práticas em Flutter  
+- 🔍 Buscar receitas por nome
+- 📋 Visualizar detalhes da receita (ingredientes, modo de preparo)
+- ❤️ Marcar receitas favoritas
+- 📱 Interface responsiva adaptada para Android, iOS
+- 🧪 Código limpo e modular com boas práticas em Flutter
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
-- [Flutter](https://flutter.dev/)  
-- [Dart](https://dart.dev/)  
-- [Flutter Web](https://flutter.dev/web)  
-- [Material Design](https://m3.material.io/)  
+- [Flutter](https://flutter.dev/)
+- [Dart](https://dart.dev/)
+- [Flutter Web](https://flutter.dev/web)
+- [Material Design](https://m3.material.io/)
 
 ---
 
@@ -40,6 +39,7 @@ Aplicativo Flutter multiplataforma para consulta e organização de receitas cul
 
 - Ter o **Flutter** instalado ([instruções aqui](https://docs.flutter.dev/get-started/install))
 - Um emulador ou dispositivo físico configurado
+- Ter uma chave da api do site [randommer.io](https://randommer.io/)
 
 ### 📦 Passos
 
@@ -53,14 +53,18 @@ cd flutter_receitas
 # Instale as dependências
 flutter pub get
 
+# Copie o arquivo .env.example para um arquivo .env e preencha com a sua chave da API do randommer.io
+cp .env.example .env
+
 # Rode o projeto
 flutter run
 ```
+
 ## 👨‍💻 Autores
 
 - [Ricardo Bregalda](https://github.com/RicardoMBregalda)
 - [Matheus Tregnago](https://github.com/matregnago)
 
-<img src="https://contrib.rocks/image?repo=RicardoMBregalda/asteroidway" width="80"/>
+<img src="https://contrib.rocks/image?repo=RicardoMBregalda/flutter_receitas" width="80"/>
 
 ---

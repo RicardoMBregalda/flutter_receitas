@@ -3,18 +3,14 @@ import 'dart:math';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
-
-import '../models/ingrediente.dart';
-import '../models/instrucao.dart';
-import '../models/receita.dart';
-import '../repositories/ingrediente_repository.dart';
-import '../repositories/instrucao_repository.dart';
-import '../repositories/receita_repository.dart';
+import '/models/ingrediente.dart';
+import '/models/instrucao.dart';
+import '/models/receita.dart';
+import '/repositories/ingrediente_repository.dart';
+import '/repositories/instrucao_repository.dart';
+import '/repositories/receita_repository.dart';
 
 class ReceitaService {
-  final _uuid = const Uuid();
-  final _random = Random();
-
   String removePontosEVirgulas(String palavra) {
     return palavra.replaceAll(',', '').replaceAll('.', '');
   }
@@ -23,7 +19,6 @@ class ReceitaService {
     final url = Uri.parse(
       'https://randommer.io/api/Text/LoremIpsum?loremType=normal&type=paragraphs&number=5',
     );
-
     final response = await http.get(
       url,
       headers: {'accept': '*/*', 'X-Api-Key': dotenv.env['API_KEY'] ?? ''},

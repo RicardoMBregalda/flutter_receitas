@@ -1,20 +1,11 @@
-import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/services/receita_service.dart';
-import '/models/ingrediente.dart';
-import '/models/instrucao.dart';
-import '/repositories/ingrediente_repository.dart';
-import '/repositories/instrucao_repository.dart';
-import 'package:uuid/uuid.dart';
+import '/services/receita_service.dart';
 import '/screens/receita_edit_screen.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
-import '../repositories/receita_repository.dart';
+import '/repositories/receita_repository.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
-import 'package:http/http.dart' as http;
 
 class ReceitaListScreen extends StatefulWidget {
   const ReceitaListScreen({super.key});
