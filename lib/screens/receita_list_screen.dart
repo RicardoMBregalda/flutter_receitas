@@ -39,6 +39,17 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     }
   }
 
+  void _gerarReceitaAleatoria() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await ReceitaService().criarReceitaAleatoria();
+    _carregarReceitas();
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   void removerReceita(Receita receita) async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -139,9 +150,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
             onPressed: () async {
               final state = _key.currentState;
               if (state != null) {
-                await ReceitaService().criarReceitaAleatoria();
-                ();
-                _carregarReceitas();
+                _gerarReceitaAleatoria();
                 state.toggle();
               }
             },
