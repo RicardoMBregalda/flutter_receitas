@@ -1,5 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:receitas_trabalho_2/firebase_options.dart';
 import '/screens/ingrediente_create_screen.dart';
 import '/screens/instrucao_create_screen.dart';
 import '/screens/ingrediente_edit.dart';
@@ -10,6 +12,9 @@ import '/screens/receita_edit_screen.dart';
 import '/screens/receita_list_screen.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MainApp());
@@ -22,7 +27,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        primaryColor: Colors.teal,
+        primaryColor: const Color.fromARGB(255, 36, 38, 38),
         scaffoldBackgroundColor: Colors.grey[100],
 
         colorScheme: ColorScheme.fromSwatch().copyWith(

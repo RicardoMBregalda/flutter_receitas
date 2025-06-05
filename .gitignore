@@ -72,3 +72,9 @@
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+
+**/android/app/google-services.json
+**/ios/firebase_app_id_file.json
+**/ios/Runner/GoogleServices-Info.plist
+**/lib/firebase_options.dart
+**/firebase.json
