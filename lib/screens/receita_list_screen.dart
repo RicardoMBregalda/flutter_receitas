@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:receitas_trabalho_2/services/auth_service.dart';
 import '/services/receita_service.dart';
 import '/screens/receita_edit_screen.dart';
 import '/models/receita.dart';
@@ -6,9 +7,11 @@ import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
 import '/repositories/receita_repository.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ReceitaListScreen extends StatefulWidget {
-  const ReceitaListScreen({super.key});
+  final User user;
+  const ReceitaListScreen({super.key, required this.user});
   static const routeName = '/receita';
   @override
   // ignore: library_private_types_in_public_api
@@ -101,6 +104,15 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     }
   }
 
+  void _signOut() async {
+    await AuthenticationService().signOut();
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Você saiu com sucesso!')));
+    }
+  }
+
   void verDetalhes(Receita receita) async {
     await Navigator.pushNamed(
       context,
@@ -113,7 +125,17 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Minhas Receitas'), elevation: 2),
+      appBar: AppBar(
+        title: const Text('Minhas Receitas'),
+        elevation: 2,
+        actions: [
+          IconButton(
+            onPressed: _signOut,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sair',
+          ),
+        ],
+      ),
       body:
           _isLoading
               ? Center(child: CircularProgressIndicator())
