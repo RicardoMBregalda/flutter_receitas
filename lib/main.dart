@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:receitas_trabalho_2/firebase_options.dart';
+import 'package:receitas_trabalho_2/screens/auth_screen.dart';
 import '/screens/ingrediente_create_screen.dart';
 import '/screens/instrucao_create_screen.dart';
 import '/screens/ingrediente_edit.dart';
@@ -9,7 +10,7 @@ import '/screens/instrucao_edit.dart.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
 import '/screens/receita_edit_screen.dart';
-import '/screens/receita_list_screen.dart';
+import '/services/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,9 +69,9 @@ class MainApp extends StatelessWidget {
           ),
         ),
       ),
-      home: ReceitaListScreen(),
+      home: AuthWrapper(),
       routes: {
-        ReceitaListScreen.routeName: (context) => ReceitaListScreen(),
+        AuthScreen.routeName: (ctx) => const AuthScreen(),
         ReceitaDetalheScreen.routeName: (context) => ReceitaDetalheScreen(),
         ReceitaEditScreen.routeName: (context) => ReceitaEditScreen(),
         InstrucaoEditScreen.routeName: (context) => InstrucaoEditScreen(),
