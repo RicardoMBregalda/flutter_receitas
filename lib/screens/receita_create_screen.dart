@@ -33,7 +33,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
   final _formKey = GlobalKey<FormState>();
   final _uuid = const Uuid();
 
-  // Controllers para os campos principais da receita
   final _nomeController = TextEditingController();
   final _notaController = TextEditingController();
   final _tempoController = TextEditingController();
@@ -41,19 +40,16 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
   final _quantidadeController = TextEditingController();
   final _descricaoController = TextEditingController();
 
-  // AJUSTE: Listas para gerenciar os controllers dos campos dinâmicos
   final List<_IngredienteFieldState> _ingredienteFields = [];
   final List<TextEditingController> _instrucaoControllers = [];
 
   @override
   void initState() {
     super.initState();
-    // Inicia a tela com um campo de cada já disponível
     _addIngredienteField();
     _addInstrucaoField();
   }
 
-  // AJUSTE: Limpeza de memória para TODOS os controllers
   @override
   void dispose() {
     _nomeController.dispose();
@@ -72,7 +68,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
     super.dispose();
   }
 
-  // AJUSTE: Funções para adicionar e remover campos dinamicamente
   void _addIngredienteField() {
     setState(() {
       _ingredienteFields.add(_IngredienteFieldState());
@@ -99,7 +94,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
     });
   }
 
-  // AJUSTE: Método de submissão atualizado
   void _onPressed() async {
     if (_formKey.currentState!.validate()) {
       final userId = Provider.of<AuthService>(context, listen: false).userId;
@@ -123,7 +117,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
               })
               .toList();
 
-      // Converte o texto dos controllers em objetos Instrucao
       final List<Instrucao> instrucoes =
           _instrucaoControllers
               .map((controller) => controller.text.trim())
@@ -150,7 +143,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
         instrucoes: instrucoes, // Adiciona a lista de instruções
       );
 
-      // O repositório 'adicionar' já foi ajustado para salvar a receita e seus filhos
       await ReceitaRepository().adicionar(receita);
       if (!mounted) return;
       Navigator.pop(context, receita);
