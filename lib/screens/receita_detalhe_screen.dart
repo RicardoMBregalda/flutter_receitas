@@ -201,7 +201,7 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
               final ingrediente = _receita!.ingredientes[index];
               return CheckboxListTile(
                 controlAffinity: ListTileControlAffinity.leading,
-                title: Text('${ingrediente.nome} (${ingrediente.quantidade})'),
+                title: Text('${ingrediente.nome} - ${ingrediente.quantidade}'),
                 value: _ingredientesMarcados[index],
                 onChanged: (bool? value) {
                   setState(() {
