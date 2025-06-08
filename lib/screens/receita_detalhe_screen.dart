@@ -1,289 +1,261 @@
 import 'package:flutter/material.dart';
-import '/repositories/ingrediente_repository.dart';
-import '/repositories/instrucao_repository.dart';
-import '/screens/ingrediente_create_screen.dart';
-import '/screens/instrucao_create_screen.dart';
-import '/models/ingrediente.dart';
-import '/models/instrucao.dart';
+import 'package:provider/provider.dart';
+import 'package:receitas_trabalho_2/services/auth_service.dart';
+import '/repositories/receita_repository.dart';
 import '/models/receita.dart';
-import '/screens/ingrediente_edit.dart';
-import '/screens/instrucao_edit.dart.dart';
-import '/screens/receita_edit_screen.dart';
+import '/screens/receita_edit_screen.dart'; // Mantido para editar dados gerais
 
 class ReceitaDetalheScreen extends StatefulWidget {
   const ReceitaDetalheScreen({super.key});
   static const routeName = '/receita_detalhe';
   @override
-  // ignore: library_private_types_in_public_api
-  _ReceitaDetalheScreenState createState() => _ReceitaDetalheScreenState();
+  State<ReceitaDetalheScreen> createState() => _ReceitaDetalheScreenState();
 }
 
 class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
-  List<Ingrediente> _ingredientes = [];
-  List<Instrucao> _instrucoes = [];
-  late Receita _receita;
-  bool _isInitialized = false;
+  Receita? _receita;
+  bool _isLoading = true;
+  // AJUSTE: Estado temporário para os checkboxes dos ingredientes
+  late List<bool> _ingredientesMarcados;
+
+  final _receitaRepository = ReceitaRepository();
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_isInitialized) {
-      final receita = ModalRoute.of(context)!.settings.arguments as Receita;
-      _receita = receita;
-      _isInitialized = true;
-      _carregarDados();
+    if (_receita == null) {
+      final receitaInicial =
+          ModalRoute.of(context)!.settings.arguments as Receita;
+      setState(() {
+        _receita = receitaInicial;
+        // Inicializa a lista de marcadores com 'false'
+        _ingredientesMarcados = List<bool>.filled(
+          receitaInicial.ingredientes.length,
+          false,
+        );
+      });
+      _carregarDadosCompletos();
     }
   }
 
-  Future<void> _carregarDados() async {
-    var ingredientes = await IngredienteRepository().ingredientesReceita(
-      _receita.id,
-    );
-    var instrucoes = await InstrucaoRepository().instrucoesReceita(_receita.id);
-    setState(() {
-      _ingredientes = ingredientes;
-      _instrucoes = instrucoes;
-    });
+  Future<void> _carregarDadosCompletos() async {
+    if (!mounted) return;
+    if (!_isLoading) setState(() => _isLoading = true);
+
+    final userId = Provider.of<AuthService>(context, listen: false).userId;
+    if (userId == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    if (_receita != null) {
+      final receitaCompleta = await _receitaRepository.buscarReceitaCompleta(
+        _receita!.id,
+        userId,
+      );
+      if (mounted) {
+        setState(() {
+          _receita = receitaCompleta;
+          // AJUSTE: Reinicializa os marcadores com base nos dados carregados
+          if (receitaCompleta != null) {
+            _ingredientesMarcados = List<bool>.filled(
+              receitaCompleta.ingredientes.length,
+              false,
+            );
+          }
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  void criarIngrediente() {
-    Navigator.pushNamed(
-      context,
-      IngredienteCreateScreen.routeName,
-      arguments: _receita,
-    ).then((_) => _carregarDados());
-  }
-
-  void criarInstrucao() {
-    Navigator.pushNamed(
-      context,
-      InstrucaoCreateScreen.routeName,
-      arguments: _receita,
-    ).then((_) => _carregarDados());
-  }
-
-  void editarIngrediente(Ingrediente ingrediente) {
-    Navigator.pushNamed(
-      context,
-      IngredienteEditScreen.routeName,
-      arguments: ingrediente,
-    ).then((_) => {_carregarDados()});
-  }
-
-  void editarReceita() {
+  void _editarInformacoesGerais() {
+    if (_receita == null) return;
+    // Navega para a tela de edição apenas para nome, nota, tempo, etc.
     Navigator.pushNamed(
       context,
       ReceitaEditScreen.routeName,
       arguments: _receita,
-    ).then((resultado) {
-      if (resultado != null && resultado is Receita) {
-        setState(() {
-          _receita = resultado;
-        });
-        _carregarDados();
-      }
-    });
-  }
-
-  void editarInstrucao(Instrucao instrucao) {
-    Navigator.pushNamed(
-      context,
-      InstrucaoEditScreen.routeName,
-      arguments: instrucao,
-    ).then((_) => _carregarDados());
-  }
-
-  void removerInstrucao(Instrucao instrucao) async {
-    await InstrucaoRepository().remover(instrucao);
-    await _carregarDados();
-  }
-
-  void removerIngrediente(Ingrediente ingrediente) async {
-    await IngredienteRepository().remover(ingrediente);
-    await _carregarDados();
+    ).then((_) => _carregarDadosCompletos());
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_receita == null || _isLoading) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text(_receita.nome)),
-      body: Padding(
-        padding: EdgeInsets.all(8),
-        child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              children: [
-                _buildHeader(),
-                SizedBox(height: 16),
-                _buildListaIngredientes(),
-                SizedBox(height: 16),
-                _buildListaInstrucoes(),
-              ],
-            ),
+      // A AppBar agora é simples, sem botões de ação
+      appBar: AppBar(
+        title: const Text('Receita'),
+        actions: [
+          // Botão para editar as informações gerais da receita (nome, nota, tempo)
+          IconButton(
+            icon: const Icon(Icons.edit_note),
+            tooltip: 'Editar informações da receita',
+            onPressed: _editarInformacoesGerais,
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Card(
-      child: Container(
-        decoration: BoxDecoration(),
-        padding: EdgeInsets.all(16),
-
+      body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _receita.nome,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton.icon(
-                  onPressed: editarReceita,
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  icon: Icon(Icons.edit),
-                  label: Text("Editar"),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.star),
-                SizedBox(width: 4),
-                Text(_receita.nota.toString()),
-                SizedBox(width: 8),
-                Icon(Icons.timer),
-                SizedBox(width: 4),
-                Text(_receita.tempoPreparo),
-              ],
-            ),
+            _buildImagemReceita(),
+            _buildTituloEDescricao(),
+            const Divider(height: 32, indent: 16, endIndent: 16),
+            _buildListaIngredientes(),
+            const Divider(height: 32, indent: 16, endIndent: 16),
+            _buildListaInstrucoes(),
+            const SizedBox(height: 32), // Espaço no final
           ],
         ),
       ),
     );
   }
 
-  Widget _buildListaIngredientes() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-          children: [
-            Text(
-              "Ingredientes",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  // AJUSTE: Widget apenas para a imagem
+  Widget _buildImagemReceita() {
+    final String? url = _receita!.urlImagem;
+    if (url == null || url.isEmpty) {
+      return SizedBox(
+        height: 250,
+        width: double.infinity,
+        child: Container(
+          color: Colors.grey[300],
+          child: const Center(
+            child: Icon(
+              Icons.image_not_supported,
+              size: 100,
+              color: Colors.grey,
             ),
-            ElevatedButton.icon(
-              onPressed: criarIngrediente,
-              icon: Icon(Icons.add),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              label: Text("Adicionar"),
-            ),
-          ],
-        ),
-        SizedBox(height: 8),
-        Card(
-          child: ListView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: _ingredientes.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () => editarIngrediente(_ingredientes[index]),
-                      icon: Icon(Icons.edit),
-                    ),
-                    IconButton(
-                      onPressed: () => removerIngrediente(_ingredientes[index]),
-                      icon: Icon(Icons.delete),
-                    ),
-                  ],
-                ),
-                title: Text(
-                  '${_ingredientes[index].nome} - ${_ingredientes[index].quantidade}',
-                ),
-              );
-            },
           ),
         ),
-      ],
+      );
+    } else {
+      return SizedBox(
+        height: 250,
+        width: double.infinity,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return const Center(child: CircularProgressIndicator());
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(Icons.broken_image, size: 100, color: Colors.grey),
+            );
+          },
+        ),
+      );
+    }
+  }
+
+  // AJUSTE: Widget para o título e a descrição abaixo da imagem
+  Widget _buildTituloEDescricao() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _receita!.nome,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _receita?.descricao ?? 'Descrição não informada',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: Colors.grey[700]),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildListaInstrucoes() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-          children: [
-            Text(
-              "Instruções",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            ElevatedButton.icon(
-              onPressed: criarInstrucao,
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              icon: Icon(Icons.add),
-              label: Text("Adicionar"),
-            ),
-          ],
-        ),
-        SizedBox(height: 8),
-        Card(
-          child: ListView.builder(
-            padding: EdgeInsets.zero,
+  // AJUSTE: Lista de ingredientes com Checkbox
+  Widget _buildListaIngredientes() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Ingredientes', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          ListView.builder(
             shrinkWrap: true,
-            itemCount: _instrucoes.length,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _receita!.ingredientes.length,
             itemBuilder: (context, index) {
-              return ListTile(
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () => editarInstrucao(_instrucoes[index]),
-                      icon: Icon(Icons.edit),
-                    ),
-                    IconButton(
-                      onPressed: () => removerInstrucao(_instrucoes[index]),
-                      icon: Icon(Icons.delete),
-                    ),
-                  ],
-                ),
-                title: Text("${index + 1} - ${_instrucoes[index].instrucao}"),
+              final ingrediente = _receita!.ingredientes[index];
+              return CheckboxListTile(
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text('${ingrediente.nome} (${ingrediente.quantidade})'),
+                value: _ingredientesMarcados[index],
+                onChanged: (bool? value) {
+                  setState(() {
+                    _ingredientesMarcados[index] = value!;
+                  });
+                },
               );
             },
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  // AJUSTE: Lista de instruções com subtítulos
+  Widget _buildListaInstrucoes() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Instruções', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _receita!.instrucoes.length,
+            itemBuilder: (context, index) {
+              final instrucao = _receita!.instrucoes[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Passo ${index + 1}',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      instrucao.instrucao,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[800]),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }

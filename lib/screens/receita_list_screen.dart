@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:receitas_trabalho_2/services/auth_service.dart';
+import 'package:provider/provider.dart'; // AJUSTE: Importe o Provider
+import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
+import '/services/auth_service.dart'; // AJUSTE: Importe seu AuthService
 import '/services/receita_service.dart';
-import '/screens/receita_edit_screen.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
 import '/repositories/receita_repository.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class ReceitaListScreen extends StatefulWidget {
-  final User user;
-  const ReceitaListScreen({super.key, required this.user});
-  static const routeName = '/receita';
+  const ReceitaListScreen({super.key});
+  static const routeName = '/receita'; // Ou '/home' se for sua tela inicial
   @override
-  // ignore: library_private_types_in_public_api
-  _ReceitaListScreenState createState() => _ReceitaListScreenState();
+  State<ReceitaListScreen> createState() => _ReceitaListScreenState();
 }
 
 class _ReceitaListScreenState extends State<ReceitaListScreen> {
@@ -26,14 +24,23 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   @override
   void initState() {
     super.initState();
-    _carregarReceitas();
+    // Atrasar um pouco a chamada para garantir que o 'context' esteja pronto para o Provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarReceitas();
+    });
   }
 
-  void _carregarReceitas() async {
-    setState(() {
-      _isLoading = true;
-    });
-    final receitas = await ReceitaRepository().todasReceitas();
+  Future<void> _carregarReceitas() async {
+    setState(() => _isLoading = true);
+    final userId = Provider.of<AuthService>(context, listen: false).userId;
+
+    if (userId == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    final receitas = await ReceitaRepository().listarReceitasPorUsuario(userId);
+
     if (mounted) {
       setState(() {
         _receitas = receitas;
@@ -42,44 +49,14 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     }
   }
 
-  void _gerarReceitaAleatoria() async {
-    setState(() {
-      _isLoading = true;
-    });
-    await ReceitaService().criarReceitaAleatoria();
+  Future<void> _gerarReceitaAleatoria() async {
+    setState(() => _isLoading = true);
+
+    final userId = Provider.of<AuthService>(context, listen: false).userId;
+    if (userId == null) return;
+
+    await ReceitaService().criarReceitaAleatoria(userId);
     _carregarReceitas();
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
-  void removerReceita(Receita receita) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Confirmar exclusão'),
-            content: Text(
-              'Deseja realmente excluir a receita "${receita.nome}"?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
-                child: Text('Cancelar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text('Excluir'),
-              ),
-            ],
-          ),
-    );
-
-    if (confirmar == true) {
-      await ReceitaRepository().remover(receita);
-      _carregarReceitas();
-    }
   }
 
   void editarReceita(Receita receita) async {
@@ -89,7 +66,47 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
           arguments: receita,
         )
         as Receita?;
+
     _carregarReceitas();
+  }
+
+  void removerReceita(Receita receita) async {
+    // ... (seu código de showDialog está ótimo)
+    final confirmar = await showDialog<bool>(
+      context: context,
+
+      builder:
+          (context) => AlertDialog(
+            title: Text('Confirmar exclusão'),
+
+            content: Text(
+              'Deseja realmente excluir a receita "${receita.nome}"?',
+            ),
+
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+
+                child: Text('Cancelar'),
+              ),
+
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+
+                child: Text('Excluir'),
+              ),
+            ],
+          ),
+    );
+    if (confirmar == true) {
+      final userId = Provider.of<AuthService>(context, listen: false).userId;
+      if (userId == null) return;
+
+      await ReceitaRepository().remover(receita.id, userId);
+      _carregarReceitas();
+    }
   }
 
   void criarReceita() async {
@@ -97,6 +114,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
       context,
       ReceitaCreateScreen.routeName,
     );
+
     _carregarReceitas();
 
     if (result is Receita && mounted) {
@@ -105,11 +123,11 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   }
 
   void _signOut() async {
-    await AuthenticationService().signOut();
+    await Provider.of<AuthService>(context, listen: false).logout();
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Você saiu com sucesso!')));
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(const SnackBar(content: Text('Você saiu com sucesso!')));
     }
   }
 
