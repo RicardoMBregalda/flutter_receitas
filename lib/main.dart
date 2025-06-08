@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:receitas_trabalho_2/firebase_options.dart';
 import 'package:receitas_trabalho_2/screens/auth_screen.dart';
-import '/screens/ingrediente_create_screen.dart';
-import '/screens/instrucao_create_screen.dart';
-import '/screens/ingrediente_edit.dart';
-import '/screens/instrucao_edit.dart.dart';
+import 'package:receitas_trabalho_2/services/auth_service.dart';
+
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
 import '/screens/receita_edit_screen.dart';
 import '/services/auth_wrapper.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +17,12 @@ void main() async {
 
   await dotenv.load();
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MainApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => AuthService(),
+      child: const MainApp(),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -74,12 +78,7 @@ class MainApp extends StatelessWidget {
         AuthScreen.routeName: (ctx) => const AuthScreen(),
         ReceitaDetalheScreen.routeName: (context) => ReceitaDetalheScreen(),
         ReceitaEditScreen.routeName: (context) => ReceitaEditScreen(),
-        InstrucaoEditScreen.routeName: (context) => InstrucaoEditScreen(),
-        IngredienteEditScreen.routeName: (context) => IngredienteEditScreen(),
         ReceitaCreateScreen.routeName: (context) => ReceitaCreateScreen(),
-        InstrucaoCreateScreen.routeName: (context) => InstrucaoCreateScreen(),
-        IngredienteCreateScreen.routeName:
-            (context) => IngredienteCreateScreen(),
       },
     );
   }

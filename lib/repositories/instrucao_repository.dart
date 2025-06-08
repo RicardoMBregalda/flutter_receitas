@@ -1,4 +1,3 @@
-import '/models/receita.dart';
 import '/database/database_helper.dart';
 import '/models/instrucao.dart';
 
@@ -9,43 +8,65 @@ class InstrucaoRepository {
     return _db.inserir("instrucao", instrucao.toMap());
   }
 
-  Future<int> editar(Instrucao instrucao) async {
+
+  Future<int> editar(Instrucao instrucao, String userId) async {
     return _db.editar(
       "instrucao",
       instrucao.toMap(),
-      condicao: 'id = ?',
-      conidcaoArgs: [instrucao.id],
+      condicao:
+          'id = ? AND receitaId IN (SELECT id FROM receita WHERE userId = ?)',
+      conidcaoArgs: [instrucao.id, userId],
     );
   }
 
-  Future<int> remover(Instrucao instrucao) async {
+  Future<int> remover(Instrucao instrucao, String userId) async {
     return _db.remover(
       "instrucao",
-      condicao: 'id = ?',
-      conidcaoArgs: [instrucao.id],
+      condicao:
+          'id = ? AND receitaId IN (SELECT id FROM receita WHERE userId = ?)',
+      conidcaoArgs: [instrucao.id, userId],
     );
   }
 
-  Future<int> removerTodasInstrucoesDeUmaReceita(Receita receita) async {
+  Future<int> removerTodasInstrucoesDeUmaReceita(
+    String receitaId,
+    String userId,
+  ) async {
+    final receitaDoUsuario = await _db.obter(
+      "receita",
+      condicao: "id = ? AND userId = ?",
+      conidcaoArgs: [receitaId, userId],
+    );
+    if (receitaDoUsuario.isEmpty) {
+      return 0;
+    }
     return _db.remover(
       "instrucao",
       condicao: 'receitaId = ?',
-      conidcaoArgs: [receita.id],
+      conidcaoArgs: [receitaId],
     );
   }
 
-  Future<List<Instrucao>> instrucoesReceita(String receitaId) async {
-    var instrucoesNoBanco = await _db.obterTodos(
+  Future<List<Instrucao>> instrucoesReceita(
+    String receitaId,
+    String userId,
+  ) async {
+    final receitaDoUsuario = await _db.obter(
+      "receita",
+      condicao: "id = ? AND userId = ?",
+      conidcaoArgs: [receitaId, userId],
+    );
+
+    if (receitaDoUsuario.isEmpty) {
+      return [];
+    }
+
+    var instrucoesNoBanco = await _db.obter(
       "instrucao",
       condicao: "receitaId = ?",
       conidcaoArgs: [receitaId],
     );
-    List<Instrucao> listaDeInstrucoes = [];
 
-    for (var i = 0; i < instrucoesNoBanco.length; i++) {
-      listaDeInstrucoes.add(Instrucao.fromMap(instrucoesNoBanco[i]));
-    }
-
-    return listaDeInstrucoes;
+    return instrucoesNoBanco.map((mapa) => Instrucao.fromMap(mapa)).toList();
   }
 }

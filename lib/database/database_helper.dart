@@ -5,8 +5,8 @@ import 'package:sqflite/sqflite.dart';
 import 'sqls/ingrediente_sql.dart';
 
 class DatabaseHelper {
-  static final String _nomeBancoDeDados = "receitas.db";
-  static final int _versaoBancoDeDados = 1;
+  static final String _nomeBancoDeDados = "receita.db";
+  static final int _versaoBancoDeDados = 2;
   static late Database _bancoDeDados;
 
   inicializar() async {
@@ -38,7 +38,7 @@ class DatabaseHelper {
     return await _bancoDeDados.insert(tabela, valores);
   }
 
-  Future<List<Map<String, Object?>>> obterTodos(
+  Future<List<Map<String, Object?>>> obter(
     String tabela, {
     String? condicao,
     List<Object>? conidcaoArgs,

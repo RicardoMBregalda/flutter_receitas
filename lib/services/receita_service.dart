@@ -15,7 +15,7 @@ class ReceitaService {
     return palavra.replaceAll(',', '').replaceAll('.', '');
   }
 
-  Future<void> criarReceitaAleatoria() async {
+  Future<void> criarReceitaAleatoria(String userId) async {
     final url = Uri.parse(
       'https://randommer.io/api/Text/LoremIpsum?loremType=normal&type=paragraphs&number=5',
     );
@@ -37,6 +37,8 @@ class ReceitaService {
         id: const Uuid().v4(),
         nota: Random().nextInt(5),
         tempoPreparo: tempo < 6 ? '$tempo horas' : '$tempo minutos',
+        urlImagem: 'https://picsum.photos/200/300',
+        userId: userId,
       );
 
       await ReceitaRepository().adicionar(receita);
@@ -53,6 +55,7 @@ class ReceitaService {
             ),
             quantidade: '${Random().nextInt(1000)} g',
             receitaId: receita.id,
+            userId: userId,
           ),
         );
       }
@@ -65,6 +68,7 @@ class ReceitaService {
               palavras[Random().nextInt(palavras.length)],
             ),
             receitaId: receita.id,
+            userId: userId,
           ),
         );
       }

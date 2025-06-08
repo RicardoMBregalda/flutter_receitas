@@ -5,48 +5,116 @@ import '/models/receita.dart';
 
 class ReceitaRepository {
   static final DatabaseHelper _db = DatabaseHelper();
+  final IngredienteRepository _ingredienteRepo = IngredienteRepository();
+  final InstrucaoRepository _instrucaoRepo = InstrucaoRepository();
 
   Future<int> adicionar(Receita receita) async {
-    return _db.inserir("receita", receita.toMap());
+    int receitaId = await _db.inserir("receita", receita.toMap());
+
+    if (receitaId != 0) {
+      for (var ingrediente in receita.ingredientes) {
+        ingrediente.receitaId = receita.id; // Garante a associação
+        await _ingredienteRepo.adicionar(ingrediente);
+      }
+
+      for (var instrucao in receita.instrucoes) {
+        instrucao.receitaId = receita.id; // Garante a associação
+        await _instrucaoRepo.adicionar(instrucao);
+      }
+    }
+    return receitaId;
   }
 
-  Future<int> remover(Receita receita) async {
-    await InstrucaoRepository().removerTodasInstrucoesDeUmaReceita(receita);
-    await IngredienteRepository().removerTodosIngredientesDeUmaReceita(receita);
+  Future<int> remover(String receitaId, String userId) async {
+    await _instrucaoRepo.removerTodasInstrucoesDeUmaReceita(receitaId, userId);
+    await _ingredienteRepo.removerTodosIngredientesDeUmaReceita(
+      receitaId,
+      userId,
+    );
     return _db.remover(
       "receita",
-      condicao: 'id = ?',
-      conidcaoArgs: [receita.id],
+      condicao: 'id = ? AND userId = ?',
+      conidcaoArgs: [receitaId, userId],
     );
   }
 
-  Future<int> editar(Receita receita) async {
-    return _db.editar(
+  Future<int> editar(Receita receita, String userId) async {
+    int result = await _db.editar(
       "receita",
       receita.toMap(),
-      condicao: 'id = ?',
-      conidcaoArgs: [receita.id],
+      condicao: 'id = ? AND userId = ?',
+      conidcaoArgs: [receita.id, userId],
     );
-  }
-
-  Future<List<Receita>> todasReceitas() async {
-    var receitasNoBanco = await _db.obterTodos("receita");
-    List<Receita> listaDeReceitas = [];
-
-    for (var i = 0; i < receitasNoBanco.length; i++) {
-      var receita = Receita.fromMap(receitasNoBanco[i]);
-      receita.quantidadeIngredientes = await ReceitaRepository()
-          .quantidadeIngredientes(receita);
-      listaDeReceitas.add(receita);
+    if (result > 0) {
+      await _instrucaoRepo.removerTodasInstrucoesDeUmaReceita(
+        receita.id,
+        userId,
+      );
+      await _ingredienteRepo.removerTodosIngredientesDeUmaReceita(
+        receita.id,
+        userId,
+      );
+      for (var ingrediente in receita.ingredientes) {
+        ingrediente.receitaId = receita.id;
+        await _ingredienteRepo.adicionar(ingrediente);
+      }
+      for (var instrucao in receita.instrucoes) {
+        instrucao.receitaId = receita.id;
+        await _instrucaoRepo.adicionar(instrucao);
+      }
     }
-
-    return listaDeReceitas;
+    return result;
   }
 
-  Future<int> quantidadeIngredientes(Receita receita) async {
-    var listaDeIngredientes = await IngredienteRepository().ingredientesReceita(
-      receita.id,
+  Future<List<Receita>> listarReceitasPorUsuario(String userId) async {
+    var receitasNoBanco = await _db.obter(
+      "receita",
+      condicao: "userId = ?",
+      conidcaoArgs: [userId],
     );
-    return listaDeIngredientes.length;
+
+    return await Future.wait(
+      receitasNoBanco.map((mapa) async {
+        var receita = Receita.fromMap(mapa);
+
+        receita.ingredientes = await _ingredienteRepo.ingredientesReceita(
+          receita.id,
+          userId,
+        );
+
+        receita.instrucoes = await _instrucaoRepo.instrucoesReceita(
+          receita.id,
+          userId,
+        );
+
+        return receita;
+      }),
+    );
+  }
+
+  Future<Receita?> buscarReceitaCompleta(
+    String receitaId,
+    String userId,
+  ) async {
+    var mapReceita = await _db.obter(
+      "receita",
+      condicao: "id = ? AND userId = ?",
+      conidcaoArgs: [receitaId, userId],
+    );
+    if (mapReceita.isEmpty) {
+      return null;
+    }
+    var receita = Receita.fromMap(mapReceita.first);
+
+    receita.ingredientes = await _ingredienteRepo.ingredientesReceita(
+      receitaId,
+      userId,
+    );
+    receita.instrucoes = await _instrucaoRepo.instrucoesReceita(
+      receitaId,
+      userId,
+    );
+
+    return receita;
   }
 }

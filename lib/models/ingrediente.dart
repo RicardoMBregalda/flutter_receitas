@@ -4,12 +4,14 @@ class Ingrediente {
   String id;
   String nome;
   String quantidade;
+  String userId;
   String receitaId;
 
   Ingrediente({
     required this.id,
     required this.nome,
     required this.quantidade,
+    required this.userId,
     required this.receitaId,
   });
 
@@ -18,6 +20,7 @@ class Ingrediente {
       'id': id,
       'nome': nome,
       'quantidade': quantidade,
+      'userId': userId,
       'receitaId': receitaId,
     };
   }
@@ -27,6 +30,7 @@ class Ingrediente {
       id: map['id'] as String,
       nome: map['nome'] as String,
       quantidade: map['quantidade'] as String,
+      userId: map['userId'] as String,
       receitaId: map['receitaId'] as String,
     );
   }

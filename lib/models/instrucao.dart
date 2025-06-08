@@ -3,17 +3,21 @@ import 'dart:convert';
 class Instrucao {
   String id;
   String instrucao;
+  String userId;
   String receitaId;
 
   Instrucao({
     required this.id,
     required this.instrucao,
+    required this.userId,
     required this.receitaId,
   });
+
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
       'instrucao': instrucao,
+      'userId': userId,
       'receitaId': receitaId,
     };
   }
@@ -22,6 +26,7 @@ class Instrucao {
     return Instrucao(
       id: map['id'] as String,
       instrucao: map['instrucao'] as String,
+      userId: map['userId'] as String,
       receitaId: map['receitaId'] as String,
     );
   }
