@@ -335,7 +335,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
     );
   }
 
-  // AJUSTE: Widget para construir a lista de campos de instruções
   Widget _buildInstrucoesInputList() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
