@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:receitas_trabalho_2/services/auth_service.dart';
 import '/screens/receita_list_screen.dart';
 import '/screens/auth_screen.dart';
 
@@ -8,27 +9,13 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      // Ouve o stream de mudanças de estado de autenticação
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        // Enquanto está conectando...
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final authService = context.watch<AuthService>();
 
-        // Se o snapshot tem dados, significa que o usuário está logado
-        if (snapshot.hasData) {
-          // snapshot.data contém o objeto User com todas as informações
-          // como uid, email, displayName, etc.
-          return ReceitaListScreen(
-            user: snapshot.data!,
-          ); // Redireciona para a tela principal
-        }
-
-        // Se não tem dados, o usuário não está logado
-        return const AuthScreen(); // Redireciona para a tela de login
-      },
-    );
+    if (authService.isAuthenticated) {
+      return const ReceitaListScreen(); // ou a sua tela de lista de receitas
+    } else {
+      // Se não, mostre a tela de autenticação.
+      return const AuthScreen();
+    }
   }
 }
