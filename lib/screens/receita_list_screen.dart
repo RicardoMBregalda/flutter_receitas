@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // AJUSTE: Importe o Provider
 import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
+import 'package:receitas_trabalho_2/services/local_auth_service.dart';
 import '/services/auth_service.dart'; // AJUSTE: Importe seu AuthService
 import '/services/receita_service.dart';
 import '/models/receita.dart';
@@ -12,6 +13,7 @@ import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 class ReceitaListScreen extends StatefulWidget {
   const ReceitaListScreen({super.key});
   static const routeName = '/receita'; // Ou '/home' se for sua tela inicial
+
   @override
   State<ReceitaListScreen> createState() => _ReceitaListScreenState();
 }
@@ -20,6 +22,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   List<Receita> _receitas = [];
   bool _isLoading = true;
   final _key = GlobalKey<ExpandableFabState>();
+  final _localAuthService = LocalAuthService();
 
   @override
   void initState() {
@@ -100,12 +103,42 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
             ],
           ),
     );
+
     if (confirmar == true) {
+      // 2. Autenticação biométrica ANTES da exclusão
+      final isAuthenticated = await _localAuthService.authenticate(
+        'Autentique-se para excluir a receita',
+      );
+
+      if (!isAuthenticated) {
+        if (mounted) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Autenticação falhou. A receita não foi excluída.',
+                ),
+              ),
+            );
+        }
+        return;
+      }
+
+      // 3. Se autenticado, prossegue com a exclusão
       final userId = Provider.of<AuthService>(context, listen: false).userId;
       if (userId == null) return;
 
       await ReceitaRepository().remover(receita.id, userId);
       _carregarReceitas();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Receita excluída com sucesso!')),
+          );
+      }
     }
   }
 
