@@ -10,7 +10,7 @@ class ReceitaSql {
     return [
       "insert into receita(id, userId, nome, descricao, nota, urlImagem, criadoEm, tempoPreparo) values ('1', '$userId', 'Feijoada', 'Prato tradicional brasileiro à base de feijão preto e carnes de porco.', 5, '', '$now', '2h')",
       "insert into receita(id, userId, nome, descricao, nota, urlImagem, criadoEm, tempoPreparo) values ('2', '$userId', 'Lasanha', 'Massa em camadas intercalada com molho à bolonhesa, queijo e presunto.', 4, '', '$now', '1h30m')",
-      "insert into receita(id, userId, nome, descricao, nota, urlImagem, criadoEm, tempoPreparo) values ('3', '$userId', 'Moqueca', 'Cozido de peixe com leite de coco, azeite de dendê, pimentões e coentro.', 5, ', '$now', '1h45m')",
+      "insert into receita(id, userId, nome, descricao, nota, urlImagem, criadoEm, tempoPreparo) values ('3', '$userId', 'Moqueca', 'Cozido de peixe com leite de coco, azeite de dendê, pimentões e coentro.', 5, '', '$now', '1h45m')",
       "insert into receita(id, userId, nome, descricao, nota, urlImagem, criadoEm, tempoPreparo) values ('4', '$userId', 'Bolo de Cenoura', 'Bolo fofinho de cenoura com uma deliciosa cobertura de brigadeiro.', 5, '', '$now', '1h')",
       "insert into receita(id, userId, nome, descricao, nota, urlImagem, criadoEm, tempoPreparo) values ('5', '$userId', 'Pudim', 'Sobremesa clássica feita com leite condensado, ovos e uma calda de caramelo.', 5, '', '$now', '1h')",
       "insert into receita(id, userId, nome, descricao, nota, urlImagem, criadoEm, tempoPreparo) values ('6', '$userId', 'Brigadeiro', 'Doce brasileiro icônico feito com leite condensado, chocolate em pó e manteiga.', 5, '', '$now', '30m')",
