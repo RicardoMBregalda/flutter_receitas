@@ -232,15 +232,15 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         FloatingActionButton(
           heroTag: 'shuffle',
           onPressed: _gerarReceitaAleatoria,
-          child: const Icon(Icons.shuffle, color: Colors.white),
           tooltip: 'Receita Aleatória',
+          child: const Icon(Icons.shuffle, color: Colors.white),
         ),
         const SizedBox(height: 16),
         FloatingActionButton(
           heroTag: 'add',
           onPressed: criarReceita,
-          child: const Icon(Icons.add, color: Colors.white),
           tooltip: 'Nova Receita',
+          child: const Icon(Icons.add, color: Colors.white),
         ),
       ],
     );
