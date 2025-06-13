@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // AJUSTE: Importe o Provider
+import 'package:receitas_trabalho_2/screens/backup_screen.dart';
 import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
 import 'package:receitas_trabalho_2/services/local_auth_service.dart';
 import '/services/auth_service.dart'; // AJUSTE: Importe seu AuthService
@@ -8,11 +9,10 @@ import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
 import '/repositories/receita_repository.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 
 class ReceitaListScreen extends StatefulWidget {
   const ReceitaListScreen({super.key});
-  static const routeName = '/receita'; // Ou '/home' se for sua tela inicial
+  static const routeName = '/receita';
 
   @override
   State<ReceitaListScreen> createState() => _ReceitaListScreenState();
@@ -21,13 +21,11 @@ class ReceitaListScreen extends StatefulWidget {
 class _ReceitaListScreenState extends State<ReceitaListScreen> {
   List<Receita> _receitas = [];
   bool _isLoading = true;
-  final _key = GlobalKey<ExpandableFabState>();
   final _localAuthService = LocalAuthService();
 
   @override
   void initState() {
     super.initState();
-    // Atrasar um pouco a chamada para garantir que o 'context' esteja pronto para o Provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _carregarReceitas();
     });
@@ -74,7 +72,6 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   }
 
   void removerReceita(Receita receita) async {
-    // ... (seu código de showDialog está ótimo)
     final confirmar = await showDialog<bool>(
       context: context,
 
@@ -105,7 +102,6 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     );
 
     if (confirmar == true) {
-      // 2. Autenticação biométrica ANTES da exclusão
       final isAuthenticated = await _localAuthService.authenticate(
         'Autentique-se para excluir a receita',
       );
@@ -124,8 +120,6 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         }
         return;
       }
-
-      // 3. Se autenticado, prossegue com a exclusão
       final userId = Provider.of<AuthService>(context, listen: false).userId;
       if (userId == null) return;
 
@@ -164,6 +158,17 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     }
   }
 
+  void _abrirTelaBackup() {
+    final userId = Provider.of<AuthService>(context, listen: false).userId;
+    if (userId == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BackupScreen(userId: userId)),
+    );
+    _carregarReceitas();
+  }
+
   void verDetalhes(Receita receita) async {
     await Navigator.pushNamed(
       context,
@@ -181,6 +186,11 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         elevation: 2,
         actions: [
           IconButton(
+            onPressed: _abrirTelaBackup,
+            icon: const Icon(Icons.backup, color: Colors.white),
+            tooltip: 'Backup & Restauração',
+          ),
+          IconButton(
             onPressed: _signOut,
             icon: const Icon(Icons.logout),
             tooltip: 'Sair',
@@ -194,42 +204,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
               ? _buildEmptyState()
               : _buildReceitasList(),
 
-      floatingActionButtonLocation: ExpandableFab.location,
-      floatingActionButton: ExpandableFab(
-        key: _key,
-        openButtonBuilder: RotateFloatingActionButtonBuilder(
-          child: const Icon(Icons.add),
-          fabSize: ExpandableFabSize.regular,
-        ),
-        closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-          child: const Icon(Icons.close),
-          fabSize: ExpandableFabSize.small,
-        ),
-        children: [
-          FloatingActionButton(
-            heroTag: null,
-            child: const Icon(Icons.add),
-            onPressed: () {
-              final state = _key.currentState;
-              if (state != null) {
-                criarReceita();
-                state.toggle();
-              }
-            },
-          ),
-          FloatingActionButton(
-            heroTag: null,
-            child: const Icon(Icons.shuffle),
-            onPressed: () async {
-              final state = _key.currentState;
-              if (state != null) {
-                _gerarReceitaAleatoria();
-                state.toggle();
-              }
-            },
-          ),
-        ],
-      ),
+      floatingActionButton: _buildFloatingActionButtons(),
     );
   }
 
@@ -250,6 +225,27 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFloatingActionButtons() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton(
+          heroTag: 'shuffle',
+          onPressed: _gerarReceitaAleatoria,
+          child: const Icon(Icons.shuffle, color: Colors.white),
+          tooltip: 'Receita Aleatória',
+        ),
+        const SizedBox(height: 16),
+        FloatingActionButton(
+          heroTag: 'add',
+          onPressed: criarReceita,
+          child: const Icon(Icons.add, color: Colors.white),
+          tooltip: 'Nova Receita',
+        ),
+      ],
     );
   }
 

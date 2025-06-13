@@ -8,37 +8,27 @@ class DatabaseHelper {
   static final String _nomeBancoDeDados = "receita.db";
   static final int _versaoBancoDeDados = 2;
 
-  // --- MUDANÇA 1: Implementação do Singleton ---
-  // Torna o construtor privado
   DatabaseHelper._privateConstructor();
-  // Cria uma instância estática e única
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
-  // Teremos apenas uma única instância do banco de dados para todo o app
   static Database? _database;
 
-  // Getter para o banco de dados. Abre a conexão na primeira vez que é acessado.
   Future<Database> get database async {
-    // Se o banco de dados já existe, retorne-o.
     if (_database != null) return _database!;
 
-    // Senão, inicialize o banco de dados pela primeira vez.
     _database = await _initDatabase();
     return _database!;
   }
 
-  // --- MUDANÇA 2: O método de inicialização se torna privado ---
-  // Este método agora só é chamado UMA VEZ pelo getter 'database'.
   Future<Database> _initDatabase() async {
     String caminhoBanco = join(await getDatabasesPath(), _nomeBancoDeDados);
     return await openDatabase(
       caminhoBanco,
       version: _versaoBancoDeDados,
-      onCreate: _criarBD, // Renomeado para seguir convenção de método privado
+      onCreate: _criarBD,
     );
   }
 
-  // Lógica de criação do banco (seu código original, apenas renomeado)
   Future _criarBD(Database db, int versao) async {
     await db.execute(ReceitaSql.criarTabelaReceita());
     await db.execute(IngredienteSql.criarTabelaIngrediente());
@@ -54,11 +44,8 @@ class DatabaseHelper {
     }
   }
 
-  // --- MUDANÇA 3: Métodos de operação agora usam o getter 'database' ---
-  // Note que REMOVEMOS a chamada 'await inicializar();' de todos eles.
-
   Future<int> inserir(String tabela, Map<String, Object?> valores) async {
-    final db = await instance.database; // Pega a instância única
+    final db = await instance.database;
     return await db.insert(tabela, valores);
   }
 
@@ -67,7 +54,7 @@ class DatabaseHelper {
     String? condicao,
     List<Object>? conidcaoArgs,
   }) async {
-    final db = await instance.database; // Pega a instância única
+    final db = await instance.database;
     return await db.query(tabela, where: condicao, whereArgs: conidcaoArgs);
   }
 
@@ -77,7 +64,7 @@ class DatabaseHelper {
     String? condicao,
     List<Object>? conidcaoArgs,
   }) async {
-    final db = await instance.database; // Pega a instância única
+    final db = await instance.database;
     return await db.update(
       tabela,
       valores,
@@ -91,7 +78,7 @@ class DatabaseHelper {
     String? condicao,
     List<Object>? conidcaoArgs,
   }) async {
-    final db = await instance.database; // Pega a instância única
+    final db = await instance.database;
     return await db.delete(tabela, where: condicao, whereArgs: conidcaoArgs);
   }
 }
