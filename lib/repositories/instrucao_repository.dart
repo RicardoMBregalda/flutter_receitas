@@ -2,12 +2,11 @@ import '/database/database_helper.dart';
 import '/models/instrucao.dart';
 
 class InstrucaoRepository {
-  static final DatabaseHelper _db = DatabaseHelper();
+  final DatabaseHelper _db = DatabaseHelper.instance;
 
   Future<int> adicionar(Instrucao instrucao) async {
     return _db.inserir("instrucao", instrucao.toMap());
   }
-
 
   Future<int> editar(Instrucao instrucao, String userId) async {
     return _db.editar(

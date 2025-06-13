@@ -2,8 +2,7 @@ import '/database/database_helper.dart';
 import '/models/ingrediente.dart';
 
 class IngredienteRepository {
-  static final DatabaseHelper _db = DatabaseHelper();
-
+  final DatabaseHelper _db = DatabaseHelper.instance;
   // O método 'adicionar' é mantido simples. A responsabilidade de garantir
   // que o 'ingrediente.receitaId' pertence ao usuário logado é do
   // ReceitaRepository, que orquestra a criação completa da receita.

@@ -4,7 +4,7 @@ import '/database/database_helper.dart';
 import '/models/receita.dart';
 
 class ReceitaRepository {
-  static final DatabaseHelper _db = DatabaseHelper();
+  final DatabaseHelper _db = DatabaseHelper.instance;
   final IngredienteRepository _ingredienteRepo = IngredienteRepository();
   final InstrucaoRepository _instrucaoRepo = InstrucaoRepository();
 
@@ -23,6 +23,36 @@ class ReceitaRepository {
       }
     }
     return receitaId;
+  }
+
+  Future<void> upsertReceita(Receita receita) async {
+    // 1. Acessa a instância do banco de dados a partir do seu DatabaseHelper
+    // Estou assumindo que seu _db tem um getter para o objeto Database.
+    // Se o nome for diferente (ex: _db.database), ajuste aqui.
+
+    await _db.inserir(
+      'receita',
+      receita.toMap(), // Os dados da receita para inserir/atualizar
+    );
+
+    await _ingredienteRepo.removerTodosIngredientesDeUmaReceita(
+      receita.id,
+      receita.userId, // Pegamos o userId da própria receita
+    );
+    await _instrucaoRepo.removerTodasInstrucoesDeUmaReceita(
+      receita.id,
+      receita.userId, // Pegamos o userId da própria receita
+    );
+
+    for (var ingrediente in receita.ingredientes) {
+      ingrediente.receitaId = receita.id; // Garante a associação correta
+      await _ingredienteRepo.adicionar(ingrediente);
+    }
+
+    for (var instrucao in receita.instrucoes) {
+      instrucao.receitaId = receita.id; // Garante a associação correta
+      await _instrucaoRepo.adicionar(instrucao);
+    }
   }
 
   Future<int> remover(String receitaId, String userId) async {
