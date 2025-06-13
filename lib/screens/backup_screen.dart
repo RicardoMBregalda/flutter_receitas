@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:receitas_trabalho_2/services/backup_service.dart';
 
 class BackupScreen extends StatefulWidget {
-  final String userId;
+  static const routeName = '/backup_screen';
 
-  const BackupScreen({super.key, required this.userId});
+  const BackupScreen({super.key});
 
   @override
   State<BackupScreen> createState() => _BackupScreenState();
@@ -25,7 +25,7 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _loadCloudBackups() async {
     setState(() => _isLoading = true);
     try {
-      final backups = await _backupService.listFirestoreBackups(widget.userId);
+      final backups = await _backupService.listFirestoreBackups(context);
       setState(() => _cloudBackups = backups);
     } catch (e) {
       _showMessage('Erro ao carregar backups: $e');
@@ -107,7 +107,7 @@ class _BackupScreenState extends State<BackupScreen> {
                                     : () {
                                       _showLoadingDialog(
                                         _backupService.exportRecipesToJson(
-                                          widget.userId,
+                                          context,
                                         ),
                                         'Criando Backup Local',
                                       );
@@ -128,7 +128,7 @@ class _BackupScreenState extends State<BackupScreen> {
                                     : () {
                                       _showLoadingDialog(
                                         _backupService.backupRecipesToFirestore(
-                                          widget.userId,
+                                          context,
                                         ),
                                         'Criando Backup na Nuvem',
                                       );
@@ -172,7 +172,9 @@ class _BackupScreenState extends State<BackupScreen> {
                                 ? null
                                 : () {
                                   _showLoadingDialog(
-                                    _backupService.importRecipesFromJson(),
+                                    _backupService.importRecipesFromJson(
+                                      context,
+                                    ),
                                     'Importando Receitas',
                                   );
                                 },
@@ -269,7 +271,7 @@ class _BackupScreenState extends State<BackupScreen> {
                                   if (value == 'restore') {
                                     _showLoadingDialog(
                                       _backupService.restoreFromFirestore(
-                                        widget.userId,
+                                        context,
                                         backup['id'],
                                       ),
                                       'Restaurando Backup',
@@ -337,10 +339,7 @@ class _BackupScreenState extends State<BackupScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                   _showLoadingDialog(
-                    _backupService.deleteFirestoreBackup(
-                      widget.userId,
-                      backupId,
-                    ),
+                    _backupService.deleteFirestoreBackup(context, backupId),
                     'Excluindo Backup',
                   );
                 },

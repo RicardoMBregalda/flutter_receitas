@@ -162,10 +162,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     final userId = Provider.of<AuthService>(context, listen: false).userId;
     if (userId == null) return;
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => BackupScreen(userId: userId)),
-    );
+    Navigator.pushNamed(context, BackupScreen.routeName);
     _carregarReceitas();
   }
 

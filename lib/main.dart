@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:receitas_trabalho_2/firebase_options.dart';
 import 'package:receitas_trabalho_2/screens/auth_screen.dart';
+import 'package:receitas_trabalho_2/screens/backup_screen.dart';
 import 'package:receitas_trabalho_2/services/auth_service.dart';
 
 import '/screens/receita_create_screen.dart';
@@ -80,6 +81,7 @@ class MainApp extends StatelessWidget {
         ReceitaDetalheScreen.routeName: (context) => ReceitaDetalheScreen(),
         ReceitaEditScreen.routeName: (context) => ReceitaEditScreen(),
         ReceitaCreateScreen.routeName: (context) => ReceitaCreateScreen(),
+        BackupScreen.routeName: (context) => BackupScreen(),
       },
     );
   }

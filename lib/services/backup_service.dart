@@ -2,15 +2,28 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:receitas_trabalho_2/models/receita.dart';
 import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
+import 'package:receitas_trabalho_2/services/auth_service.dart';
 
 class BackupService {
   final ReceitaRepository _receitaRepository = ReceitaRepository();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Método para obter o userId do provider
+  String? _getUserId(BuildContext context) {
+    try {
+      return Provider.of<AuthService>(context, listen: false).userId;
+    } catch (e) {
+      print('Erro ao obter userId do provider: $e');
+      return null;
+    }
+  }
 
   Future<bool> solicitarPermissaoArmazenamento() async {
     if (Platform.isAndroid) {
@@ -51,8 +64,14 @@ class BackupService {
     }
   }
 
-  Future<String> exportRecipesToJson(String userId) async {
+  Future<String> exportRecipesToJson(BuildContext context) async {
     try {
+      final String? userId = _getUserId(context);
+
+      if (userId == null) {
+        return "Erro: Usuário não identificado. Faça login novamente.";
+      }
+
       final List<Receita> recipes = await _receitaRepository
           .listarReceitasPorUsuario(userId);
 
@@ -113,8 +132,14 @@ class BackupService {
     }
   }
 
-  Future<String> exportAndShareJson(String userId) async {
+  Future<String> exportAndShareJson(BuildContext context) async {
     try {
+      final String? userId = _getUserId(context);
+
+      if (userId == null) {
+        return "Erro: Usuário não identificado. Faça login novamente.";
+      }
+
       final List<Receita> recipes = await _receitaRepository
           .listarReceitasPorUsuario(userId);
 
@@ -153,8 +178,14 @@ class BackupService {
     }
   }
 
-  Future<String> importRecipesFromJson() async {
+  Future<String> importRecipesFromJson(BuildContext context) async {
     try {
+      final String? userId = _getUserId(context);
+
+      if (userId == null) {
+        return "Erro: Usuário não identificado. Faça login novamente.";
+      }
+
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
@@ -198,6 +229,9 @@ class BackupService {
         try {
           final receita = Receita.fromMap(recipeData as Map<String, dynamic>);
 
+          // Atualiza o userId da receita para o usuário atual
+          receita.userId = userId;
+
           if (receita.ingredientes.isEmpty && receita.instrucoes.isEmpty) {
             print(
               'Receita ${receita.nome} não tem ingredientes nem instruções, pulando...',
@@ -240,8 +274,17 @@ class BackupService {
     }
   }
 
-  Future<String> restoreFromFirestore(String userId, String backupId) async {
+  Future<String> restoreFromFirestore(
+    BuildContext context,
+    String backupId,
+  ) async {
     try {
+      final String? userId = _getUserId(context);
+
+      if (userId == null) {
+        return "Erro: Usuário não identificado. Faça login novamente.";
+      }
+
       final DocumentSnapshot doc =
           await _firestore
               .collection('backups')
@@ -268,6 +311,9 @@ class BackupService {
       for (final recipeData in recipesData) {
         try {
           final receita = Receita.fromMap(recipeData as Map<String, dynamic>);
+
+          // Atualiza o userId da receita para o usuário atual
+          receita.userId = userId;
 
           if (receita.ingredientes.isEmpty && receita.instrucoes.isEmpty) {
             print(
@@ -311,8 +357,14 @@ class BackupService {
     }
   }
 
-  Future<String> backupRecipesToFirestore(String userId) async {
+  Future<String> backupRecipesToFirestore(BuildContext context) async {
     try {
+      final String? userId = _getUserId(context);
+
+      if (userId == null) {
+        return "Erro: Usuário não identificado. Faça login novamente.";
+      }
+
       final List<Receita> recipes = await _receitaRepository
           .listarReceitasPorUsuario(userId);
 
@@ -349,8 +401,17 @@ class BackupService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> listFirestoreBackups(String userId) async {
+  Future<List<Map<String, dynamic>>> listFirestoreBackups(
+    BuildContext context,
+  ) async {
     try {
+      final String? userId = _getUserId(context);
+
+      if (userId == null) {
+        print('Erro: Usuário não identificado para listar backups.');
+        return [];
+      }
+
       final QuerySnapshot snapshot =
           await _firestore
               .collection('backups')
@@ -373,8 +434,17 @@ class BackupService {
     }
   }
 
-  Future<String> deleteFirestoreBackup(String userId, String backupId) async {
+  Future<String> deleteFirestoreBackup(
+    BuildContext context,
+    String backupId,
+  ) async {
     try {
+      final String? userId = _getUserId(context);
+
+      if (userId == null) {
+        return "Erro: Usuário não identificado. Faça login novamente.";
+      }
+
       await _firestore
           .collection('backups')
           .doc(userId)
