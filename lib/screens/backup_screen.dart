@@ -62,10 +62,12 @@ class _BackupScreenState extends State<BackupScreen> {
 
     try {
       final result = await operation;
-      Navigator.of(context).pop(); // Fecha o dialog de loading
+      if (!mounted) return;
+
+      Navigator.of(context).pop();
       _showMessage(result);
       if (result.contains('sucesso')) {
-        _loadCloudBackups(); // Recarrega a lista se foi bem-sucedido
+        _loadCloudBackups();
       }
     } catch (e) {
       Navigator.of(context).pop();

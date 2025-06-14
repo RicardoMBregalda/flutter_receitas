@@ -109,7 +109,7 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
 
   // Funções para adicionar e remover campos dinamicamente
   void _addIngredienteField({bool silent = false}) {
-    final action = () => _ingredienteFields.add(_IngredienteFieldState());
+    action() => _ingredienteFields.add(_IngredienteFieldState());
     silent ? action() : setState(action);
   }
 
@@ -121,7 +121,7 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
   }
 
   void _addInstrucaoField({bool silent = false}) {
-    final action = () => _instrucaoControllers.add(TextEditingController());
+    action() => _instrucaoControllers.add(TextEditingController());
     silent ? action() : setState(action);
   }
 

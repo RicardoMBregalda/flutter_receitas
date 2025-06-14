@@ -120,6 +120,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
         }
         return;
       }
+      if (!mounted) return;
       final userId = Provider.of<AuthService>(context, listen: false).userId;
       if (userId == null) return;
 
