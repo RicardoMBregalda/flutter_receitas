@@ -10,17 +10,29 @@ import 'package:provider/provider.dart';
 import 'package:receitas_trabalho_2/models/receita.dart';
 import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
 import 'package:receitas_trabalho_2/services/auth_service.dart';
+import 'package:logger/logger.dart';
 
 class BackupService {
   final ReceitaRepository _receitaRepository = ReceitaRepository();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Logger configurado
+  final Logger _logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 2,
+      errorMethodCount: 8,
+      lineLength: 120,
+      colors: true,
+      printEmojis: true,
+    ),
+  );
 
   // Método para obter o userId do provider
   String? _getUserId(BuildContext context) {
     try {
       return Provider.of<AuthService>(context, listen: false).userId;
     } catch (e) {
-      print('Erro ao obter userId do provider: $e');
+      _logger.e('Erro ao obter userId do provider', error: e);
       return null;
     }
   }
@@ -44,7 +56,7 @@ class BackupService {
         }
 
         if (status.isPermanentlyDenied) {
-          print(
+          _logger.w(
             "Permissão de armazenamento permanentemente negada. Abrindo configurações.",
           );
           await openAppSettings();
@@ -107,10 +119,21 @@ class BackupService {
         );
 
         if (outputFile != null) {
+          _logger.i(
+            'Backup local criado com sucesso via FilePicker',
+            error: {
+              'outputFile': outputFile,
+              'size': '${(jsonString.length / 1024).toStringAsFixed(1)} KB',
+              'recipesCount': recipes.length,
+            },
+          );
           return "Backup local criado com sucesso!\n📍 Local: $outputFile\nTamanho: ${(jsonString.length / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas";
         }
       } catch (e) {
-        print('FilePicker saveFile falhou: $e');
+        _logger.w(
+          'FilePicker saveFile falhou, tentando método alternativo',
+          error: e,
+        );
       }
 
       final directory = await getApplicationDocumentsDirectory();
@@ -122,12 +145,20 @@ class BackupService {
 
       if (await file.exists()) {
         final fileSize = await file.length();
-        return "Backup local criado com sucesso!\n📍 Local: ${file.path}\nTamanho: ${(fileSize / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas\n\n📝 Nota: Arquivo salvo na pasta de documentos do app.";
+        _logger.i(
+          'Backup local criado com sucesso no diretório de documentos',
+          error: {
+            'filePath': file.path,
+            'size': '${(fileSize / 1024).toStringAsFixed(1)} KB',
+            'recipesCount': recipes.length,
+          },
+        );
+        return "Backup local criado com sucesso!\nLocal: ${file.path}\nTamanho: ${(fileSize / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas\n\nNota: Arquivo salvo na pasta de documentos do app.";
       } else {
         return "Erro: Arquivo não foi criado corretamente.";
       }
     } catch (e) {
-      print('Erro no exportRecipesToJson: $e');
+      _logger.e('Erro no exportRecipesToJson', error: e);
       return "Erro ao criar backup local: ${e.toString()}";
     }
   }
@@ -171,9 +202,18 @@ class BackupService {
 
       await file.writeAsString(jsonString, encoding: utf8);
 
-      return "Backup criado e pronto para compartilhar!\n📍 Arquivo temporário: ${file.path}\nTamanho: ${(jsonString.length / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas\n\n📤 Use o compartilhamento para salvar onde desejar.";
+      _logger.i(
+        'Backup criado para compartilhamento',
+        error: {
+          'filePath': file.path,
+          'size': '${(jsonString.length / 1024).toStringAsFixed(1)} KB',
+          'recipesCount': recipes.length,
+        },
+      );
+
+      return "Backup criado e pronto para compartilhar!\nArquivo temporário: ${file.path}\nTamanho: ${(jsonString.length / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas\n\nUse o compartilhamento para salvar onde desejar.";
     } catch (e) {
-      print('Erro no exportAndShareJson: $e');
+      _logger.e('Erro no exportAndShareJson', error: e);
       return "Erro ao criar backup: ${e.toString()}";
     }
   }
@@ -233,7 +273,7 @@ class BackupService {
           receita.userId = userId;
 
           if (receita.ingredientes.isEmpty && receita.instrucoes.isEmpty) {
-            print(
+            _logger.d(
               'Receita ${receita.nome} não tem ingredientes nem instruções, pulando...',
             );
             skippedCount++;
@@ -244,17 +284,30 @@ class BackupService {
 
           if (success) {
             importedCount++;
-            print(
-              '✓ Receita ${receita.nome} importada com ${receita.ingredientes.length} ingredientes e ${receita.instrucoes.length} instruções',
+            _logger.d(
+              'Receita ${receita.nome} importada',
+              error: {
+                'ingredientesCount': receita.ingredientes.length,
+                'instrucoesCount': receita.instrucoes.length,
+              },
             );
           } else {
             errorCount++;
           }
         } catch (e) {
-          print('Erro ao importar receita: $e');
+          _logger.e('Erro ao importar receita individual', error: e);
           errorCount++;
         }
       }
+
+      _logger.i(
+        'Importação de receitas concluída',
+        error: {
+          'imported': importedCount,
+          'skipped': skippedCount,
+          'errors': errorCount,
+        },
+      );
 
       String resultado = "Importação concluída!\n";
       resultado += "$importedCount receitas importadas com sucesso\n";
@@ -269,7 +322,7 @@ class BackupService {
 
       return resultado;
     } catch (e) {
-      print('Erro no importRecipesFromJson: $e');
+      _logger.e('Erro no importRecipesFromJson', error: e);
       return "Erro ao importar receitas: ${e.toString()}";
     }
   }
@@ -316,7 +369,7 @@ class BackupService {
           receita.userId = userId;
 
           if (receita.ingredientes.isEmpty && receita.instrucoes.isEmpty) {
-            print(
+            _logger.d(
               'Receita ${receita.nome} não tem ingredientes nem instruções, pulando...',
             );
             skippedCount++;
@@ -327,17 +380,31 @@ class BackupService {
 
           if (success) {
             restoredCount++;
-            print(
-              '✓ Receita ${receita.nome} restaurada com ${receita.ingredientes.length} ingredientes e ${receita.instrucoes.length} instruções',
+            _logger.d(
+              'Receita ${receita.nome} restaurada',
+              error: {
+                'ingredientesCount': receita.ingredientes.length,
+                'instrucoesCount': receita.instrucoes.length,
+              },
             );
           } else {
             errorCount++;
           }
         } catch (e) {
-          print('Erro ao restaurar receita: $e');
+          _logger.e('Erro ao restaurar receita individual', error: e);
           errorCount++;
         }
       }
+
+      _logger.i(
+        'Restauração de backup concluída',
+        error: {
+          'backupId': backupId,
+          'restored': restoredCount,
+          'skipped': skippedCount,
+          'errors': errorCount,
+        },
+      );
 
       String resultado = "Backup restaurado com sucesso!\n";
       resultado += "$restoredCount receitas restauradas\n";
@@ -352,7 +419,7 @@ class BackupService {
 
       return resultado;
     } catch (e) {
-      print('Erro no restoreFromFirestore: $e');
+      _logger.e('Erro no restoreFromFirestore', error: e);
       return "Erro ao restaurar backup: ${e.toString()}";
     }
   }
@@ -394,9 +461,18 @@ class BackupService {
           .doc(backupId)
           .set(backupData);
 
+      _logger.i(
+        'Backup na nuvem criado com sucesso',
+        error: {
+          'backupId': backupId,
+          'recipesCount': recipes.length,
+          'userId': userId,
+        },
+      );
+
       return "Backup na nuvem criado com sucesso!\nBackup ID: $backupId\n${recipes.length} receitas salvas";
     } catch (e) {
-      print('Erro no backupRecipesToFirestore: $e');
+      _logger.e('Erro no backupRecipesToFirestore', error: e);
       return "Erro ao fazer backup no Firestore: ${e.toString()}";
     }
   }
@@ -408,7 +484,7 @@ class BackupService {
       final String? userId = _getUserId(context);
 
       if (userId == null) {
-        print('Erro: Usuário não identificado para listar backups.');
+        _logger.e('Usuário não identificado para listar backups');
         return [];
       }
 
@@ -420,6 +496,11 @@ class BackupService {
               .orderBy('metadata.criadoEm', descending: true)
               .get();
 
+      _logger.i(
+        'Backups listados com sucesso',
+        error: {'userId': userId, 'backupsCount': snapshot.docs.length},
+      );
+
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return {
@@ -429,7 +510,7 @@ class BackupService {
         };
       }).toList();
     } catch (e) {
-      print('Erro ao listar backups: $e');
+      _logger.e('Erro ao listar backups', error: e);
       return [];
     }
   }
@@ -452,9 +533,14 @@ class BackupService {
           .doc(backupId)
           .delete();
 
+      _logger.i(
+        'Backup deletado com sucesso',
+        error: {'backupId': backupId, 'userId': userId},
+      );
+
       return "Backup deletado com sucesso!";
     } catch (e) {
-      print('Erro ao deletar backup: $e');
+      _logger.e('Erro ao deletar backup', error: e);
       return "Erro ao deletar backup: ${e.toString()}";
     }
   }
