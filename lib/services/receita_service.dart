@@ -33,6 +33,9 @@ class ReceitaService {
         nome: removePontosEVirgulas(
           palavras[Random().nextInt(palavras.length)],
         ),
+        descricao: removePontosEVirgulas(
+          palavras[Random().nextInt(palavras.length)],
+        ),
         criadoEm: DateTime.now().toString(),
         id: const Uuid().v4(),
         nota: Random().nextInt(5),
