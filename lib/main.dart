@@ -5,6 +5,7 @@ import 'package:receitas_trabalho_2/firebase_options.dart';
 import 'package:receitas_trabalho_2/screens/auth_screen.dart';
 import 'package:receitas_trabalho_2/screens/backup_screen.dart';
 import 'package:receitas_trabalho_2/services/auth_service.dart';
+import 'package:receitas_trabalho_2/services/notification_service.dart';
 
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
@@ -13,12 +14,13 @@ import '/services/auth_wrapper.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await dotenv.load();
-  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     ChangeNotifierProvider(
       create: (context) => AuthService(),

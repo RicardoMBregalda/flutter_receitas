@@ -1,39 +1,449 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:receitas_trabalho_2/models/receita.dart';
 import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
-import 'package:receitas_trabalho_2/services/auth_service.dart';
 import 'package:logger/logger.dart';
+
+// Classe para passar dados entre isolates (mantida para consistência)
+class BackupIsolateData {
+  final String userId;
+  final String? outputPath;
+  final String? jsonString;
+  final String? backupId;
+  final SendPort sendPort;
+
+  BackupIsolateData({
+    required this.userId,
+    this.outputPath,
+    this.jsonString,
+    this.backupId,
+    required this.sendPort,
+  });
+}
+
+// Resultado das operações de backup
+class BackupResult {
+  final bool success;
+  final String message;
+  final Map<String, dynamic>? data;
+
+  BackupResult({
+    required this.success,
+    required this.message,
+    this.data,
+  });
+}
 
 class BackupService {
   final ReceitaRepository _receitaRepository = ReceitaRepository();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Logger _logger = Logger(printer: PrettyPrinter());
 
-  // Logger configurado
-  final Logger _logger = Logger(
-    printer: PrettyPrinter(
-      methodCount: 2,
-      errorMethodCount: 8,
-      lineLength: 120,
-      colors: true,
-      printEmojis: true,
-    ),
-  );
+  // ==================== OPERAÇÕES DE ARQUIVO LOCAL (sem alterações) ====================
 
-  // Método para obter o userId do provider
-  String? _getUserId(BuildContext context) {
+  Future<BackupResult> exportRecipesToJsonAsync({
+    required String userId,
+    required String outputPath,
+  }) async {
     try {
-      return Provider.of<AuthService>(context, listen: false).userId;
+      _logger.i("Iniciando exportação para o caminho: $outputPath");
+      final List<Receita> recipes = await _receitaRepository.listarReceitasPorUsuario(userId);
+      if (recipes.isEmpty) {
+        return BackupResult(success: false, message: "Nenhuma receita encontrada para exportar.");
+      }
+
+      final receivePort = ReceivePort();
+      await Isolate.spawn(
+        _exportRecipesToJsonIsolate,
+        {
+          'userId': userId,
+          'outputPath': outputPath,
+          'recipes': recipes.map((r) => r.toMapCompleto()).toList(),
+          'sendPort': receivePort.sendPort,
+        },
+      );
+
+      final result = await receivePort.first as BackupResult;
+      return result;
+    } catch (e, stackTrace) {
+      _logger.e('Erro ao iniciar isolate de exportação', error: e, stackTrace: stackTrace);
+      return BackupResult(success: false, message: 'Erro ao exportar: ${e.toString()}');
+    }
+  }
+
+  Future<BackupResult> importRecipesFromJsonAsync({
+    required String userId,
+    required String jsonString,
+  }) async {
+    // >> CORREÇÃO IMPORTANTE <<
+    // A restauração a partir de um JSON também não pode ocorrer no Isolate secundário
+    // porque ele precisa acessar o `ReceitaRepository` (SQLite).
+    // O Isolate deve apenas preparar os dados.
+    try {
+      final receivePort = ReceivePort();
+
+      await Isolate.spawn(
+        _prepareRecipesFromJsonIsolate, // Função renomeada para clareza
+        BackupIsolateData(
+          userId: userId,
+          jsonString: jsonString,
+          sendPort: receivePort.sendPort,
+        ),
+      );
+
+      // O Isolate retorna uma lista de objetos Receita prontos para serem inseridos
+      final dynamic isolateResult = await receivePort.first;
+
+      if (isolateResult is BackupResult && !isolateResult.success) {
+        return isolateResult; // Retorna o erro vindo do Isolate
+      }
+
+      final List<Receita> recipesToImport = isolateResult as List<Receita>;
+      int importedCount = 0;
+      int skippedCount = 0;
+      int errorCount = 0;
+
+      // A inserção no banco de dados ocorre no Isolate principal
+      for (final receita in recipesToImport) {
+        try {
+           bool success = await _receitaRepository.adicionarComBackup(receita);
+           if (success) {
+             importedCount++;
+           } else {
+             errorCount++;
+           }
+        } catch (e) {
+            errorCount++;
+        }
+      }
+
+      String resultado = "Importação concluída!\n";
+      resultado += "$importedCount receitas importadas com sucesso\n";
+      if (skippedCount > 0) resultado += "$skippedCount receitas puladas\n";
+      if (errorCount > 0) resultado += "$errorCount receitas com erro\n";
+
+      return BackupResult(
+        success: true,
+        message: resultado,
+        data: {'imported': importedCount, 'skipped': skippedCount, 'errors': errorCount},
+      );
     } catch (e) {
-      _logger.e('Erro ao obter userId do provider', error: e);
-      return null;
+      _logger.e('Erro ao importar de JSON', error: e);
+      return BackupResult(success: false, message: 'Erro ao importar: ${e.toString()}');
+    }
+  }
+
+
+  // ==================== OPERAÇÕES COM FIREBASE (COM CORREÇÕES) ====================
+
+  /// Faz backup para Firestore de forma assíncrona
+  Future<BackupResult> backupRecipesToFirestoreAsync({
+    required String userId,
+  }) async {
+    try {
+      // 1. Obter dados do SQLite no Isolate principal (Correto)
+      final List<Receita> recipes = await _receitaRepository.listarReceitasPorUsuario(userId);
+
+      if (recipes.isEmpty) {
+        return BackupResult(success: false, message: "Nenhuma receita encontrada para backup.");
+      }
+
+      final receivePort = ReceivePort();
+
+      // 2. Enviar dados para o Isolate secundário apenas para preparação do JSON
+      await Isolate.spawn(
+        _prepareFirestoreBackupIsolate, // Função renomeada e corrigida
+        {
+          'userId': userId,
+          'recipes': recipes.map((r) => r.toMapCompleto()).toList(),
+          'sendPort': receivePort.sendPort,
+        },
+      );
+
+      // 3. Receber o mapa de dados preparado do Isolate
+      final result = await receivePort.first;
+
+      if (result is Map<String, dynamic> && result.containsKey('error')) {
+         return BackupResult(success: false, message: "Erro no Isolate: ${result['error']}");
+      }
+      
+      final preparedData = result as Map<String, dynamic>;
+      final String backupId = preparedData['backupId'];
+      final Map<String, dynamic> backupData = preparedData['backupData'];
+
+      // 4. >> CORREÇÃO << Adicionar o FieldValue.serverTimestamp() no Isolate principal
+      backupData['metadata']['criadoEm'] = FieldValue.serverTimestamp();
+
+      // 5. Salvar no Firestore a partir do Isolate principal (Correto)
+      await _firestore
+          .collection('backups')
+          .doc(userId)
+          .collection('user_backups')
+          .doc(backupId)
+          .set(backupData);
+
+      return BackupResult(
+        success: true,
+        message: "Backup na nuvem criado com sucesso!\nBackup ID: $backupId\n${recipes.length} receitas salvas",
+        data: {'backupId': backupId},
+      );
+    } catch (e) {
+      _logger.e('Erro no backup assíncrono para Firestore', error: e);
+      return BackupResult(success: false, message: 'Erro ao fazer backup: ${e.toString()}');
+    }
+  }
+
+  /// Restaura backup do Firestore de forma assíncrona
+  Future<BackupResult> restoreFromFirestoreAsync({
+    required String userId,
+    required String backupId,
+  }) async {
+    try {
+      // 1. Obter dados do Firestore no Isolate principal (Correto)
+      final DocumentSnapshot doc = await _firestore
+          .collection('backups')
+          .doc(userId)
+          .collection('user_backups')
+          .doc(backupId)
+          .get();
+
+      if (!doc.exists) {
+        return BackupResult(success: false, message: "Backup não encontrado.");
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      final List<dynamic> recipesData = data['recipes'] ?? [];
+
+      if (recipesData.isEmpty) {
+        return BackupResult(success: false, message: "Nenhuma receita encontrada no backup.");
+      }
+
+      final receivePort = ReceivePort();
+
+      // 2. >> CORREÇÃO << Enviar os dados brutos para o Isolate apenas para desserializar
+      await Isolate.spawn(
+        _prepareRestoreDataIsolate, // Função renomeada e corrigida
+        {
+          'userId': userId,
+          'recipesData': recipesData,
+          'sendPort': receivePort.sendPort,
+        },
+      );
+
+      // 3. Receber a lista de objetos `Receita` prontos do Isolate
+      final dynamic isolateResult = await receivePort.first;
+
+      if (isolateResult is BackupResult && !isolateResult.success) {
+        return isolateResult; // Retorna o erro vindo do Isolate
+      }
+
+      final List<Receita> recipesToRestore = isolateResult as List<Receita>;
+      int restoredCount = 0;
+      int skippedCount = 0; // Você pode implementar a lógica de pular se quiser
+      int errorCount = 0;
+
+      // 4. >> CORREÇÃO << Iterar e salvar no banco de dados (SQLite) no Isolate principal
+      for (final receita in recipesToRestore) {
+        try {
+          // A lógica de pular receitas vazias já foi feita no Isolate
+          bool success = await _receitaRepository.adicionarComBackup(receita);
+          if (success) {
+            restoredCount++;
+          } else {
+            errorCount++;
+          }
+        } catch(e) {
+          errorCount++;
+        }
+      }
+
+      String resultado = "Backup restaurado com sucesso!\n";
+      resultado += "$restoredCount receitas restauradas\n";
+      if (skippedCount > 0) resultado += "$skippedCount receitas puladas\n";
+      if (errorCount > 0) resultado += "$errorCount receitas com erro\n";
+
+      return BackupResult(
+          success: true,
+          message: resultado,
+          data: {'restored': restoredCount, 'skipped': skippedCount, 'errors': errorCount},
+        );
+
+    } catch (e) {
+      _logger.e('Erro na restauração assíncrona do Firestore', error: e);
+      return BackupResult(success: false, message: 'Erro ao restaurar: ${e.toString()}');
+    }
+  }
+
+
+  // ==================== ISOLATE FUNCTIONS (CORRIGIDAS) ====================
+
+  static void _exportRecipesToJsonIsolate(Map<String, dynamic> data) async {
+    final sendPort = data['sendPort'] as SendPort;
+    try {
+      final userId = data['userId'] as String;
+      final outputPath = data['outputPath'] as String;
+      final List<dynamic> recipes = data['recipes'];
+
+      final Map<String, dynamic> backupData = {
+        'metadata': {
+          'userId': userId,
+          'backupDate': DateTime.now().toIso8601String(),
+          'totalRecipes': recipes.length,
+          'version': '1.0',
+        },
+        'recipes': recipes,
+      };
+
+      final String jsonString = JsonEncoder.withIndent('  ').convert(backupData);
+      final file = File(outputPath);
+      await file.writeAsString(jsonString, encoding: utf8);
+      final fileSize = await file.length();
+
+      sendPort.send(BackupResult(
+        success: true,
+        message: "Backup criado com sucesso!\nLocal: $outputPath\nTamanho: ${(fileSize / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas",
+        data: {'filePath': outputPath, 'recipesCount': recipes.length},
+      ));
+    } catch (e) {
+      // Logger não está disponível aqui, então enviamos o erro de volta
+      sendPort.send(BackupResult(success: false, message: "Erro ao criar backup no isolate: ${e.toString()}"));
+    }
+  }
+
+  // >> NOVA FUNÇÃO DE ISOLATE <<
+  // Apenas prepara a lista de Receitas, não acessa o banco de dados.
+  static void _prepareRecipesFromJsonIsolate(BackupIsolateData data) {
+    try {
+      final Map<String, dynamic> backupData = jsonDecode(data.jsonString!);
+      if (!backupData.containsKey('recipes')) {
+        data.sendPort.send(BackupResult(success: false, message: "Formato de backup inválido."));
+        return;
+      }
+
+      final List<dynamic> recipesData = backupData['recipes'];
+      final List<Receita> recipesToImport = [];
+
+      for (final recipeData in recipesData) {
+        final receita = Receita.fromMap(recipeData as Map<String, dynamic>);
+        receita.userId = data.userId; // Atribui o userId
+        
+        if (receita.ingredientes.isNotEmpty || receita.instrucoes.isNotEmpty) {
+           recipesToImport.add(receita);
+        }
+      }
+
+      // Envia a lista de objetos prontos de volta para o Isolate principal
+      data.sendPort.send(recipesToImport);
+
+    } catch (e) {
+      data.sendPort.send(BackupResult(success: false, message: "Erro ao processar o arquivo JSON: ${e.toString()}"));
+    }
+  }
+
+  // >> FUNÇÃO DE ISOLATE CORRIGIDA <<
+  // Apenas prepara o mapa de dados. Não usa FieldValue.
+  static void _prepareFirestoreBackupIsolate(Map<String, dynamic> data) {
+    final sendPort = data['sendPort'] as SendPort;
+    try {
+      final String backupId = DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+      final recipes = data['recipes'] as List<dynamic>;
+
+      // O timestamp será adicionado no Isolate principal
+      final backupData = {
+        'metadata': {
+          'userId': data['userId'],
+          'backupId': backupId,
+          // 'criadoEm' foi removido daqui
+          'totalReceitas': recipes.length,
+          'versao': '1.0',
+        },
+        'recipes': recipes,
+      };
+
+      sendPort.send({
+        'backupId': backupId,
+        'backupData': backupData,
+      });
+    } catch (e) {
+      sendPort.send({'error': e.toString()});
+    }
+  }
+  
+  // >> FUNÇÃO DE ISOLATE CORRIGIDA <<
+  // Apenas desserializa os dados para objetos `Receita`. Não acessa o SQLite.
+  static void _prepareRestoreDataIsolate(Map<String, dynamic> data) {
+    final sendPort = data['sendPort'] as SendPort;
+    try {
+      final recipesData = data['recipesData'] as List<dynamic>;
+      final userId = data['userId'] as String;
+      final List<Receita> restoredRecipes = [];
+
+      for (final recipeData in recipesData) {
+        final receita = Receita.fromMap(recipeData as Map<String, dynamic>);
+        receita.userId = userId;
+
+        if (receita.ingredientes.isNotEmpty || receita.instrucoes.isNotEmpty) {
+          restoredRecipes.add(receita);
+        }
+      }
+      
+      // Envia a lista de objetos `Receita` prontos de volta para o Isolate principal
+      sendPort.send(restoredRecipes);
+
+    } catch (e) {
+      sendPort.send(BackupResult(success: false, message: "Erro ao preparar dados para restauração: ${e.toString()}"));
+    }
+  }
+
+
+  // ==================== MÉTODOS SÍNCRONOS (mantidos) ====================
+  
+  Future<List<Map<String, dynamic>>> listFirestoreBackups({required String userId}) async {
+    // ... seu código original aqui ...
+    try {
+      final QuerySnapshot snapshot = await _firestore
+          .collection('backups')
+          .doc(userId)
+          .collection('user_backups')
+          .orderBy('metadata.criadoEm', descending: true)
+          .get();
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        // Garante que o timestamp seja convertido para String para evitar erros
+        final metadata = data['metadata'] ?? {};
+        if (metadata['criadoEm'] is Timestamp) {
+            metadata['criadoEm'] = (metadata['criadoEm'] as Timestamp).toDate().toIso8601String();
+        }
+        return {
+          'id': doc.id,
+          'metadata': metadata,
+          'totalReceitas': data['metadata']?['totalReceitas'] ?? 0,
+        };
+      }).toList();
+    } catch (e) {
+      _logger.e('Erro ao listar backups', error: e);
+      return [];
+    }
+  }
+
+  Future<String> deleteFirestoreBackup({required String userId, required String backupId}) async {
+    // ... seu código original aqui ...
+    try {
+      await _firestore
+          .collection('backups')
+          .doc(userId)
+          .collection('user_backups')
+          .doc(backupId)
+          .delete();
+      _logger.i('Backup deletado com sucesso', error: {'backupId': backupId, 'userId': userId});
+      return "Backup deletado com sucesso!";
+    } catch (e) {
+      _logger.e('Erro ao deletar backup', error: e);
+      return "Erro ao deletar backup: ${e.toString()}";
     }
   }
 
@@ -73,475 +483,6 @@ class BackupService {
       return 30;
     } catch (e) {
       return 30;
-    }
-  }
-
-  Future<String> exportRecipesToJson(BuildContext context) async {
-    try {
-      final String? userId = _getUserId(context);
-
-      if (userId == null) {
-        return "Erro: Usuário não identificado. Faça login novamente.";
-      }
-
-      final List<Receita> recipes = await _receitaRepository
-          .listarReceitasPorUsuario(userId);
-
-      if (recipes.isEmpty) {
-        return "Nenhuma receita encontrada para exportar.";
-      }
-
-      final List<Map<String, dynamic>> jsonRecipes =
-          recipes.map((recipe) => recipe.toMapCompleto()).toList();
-
-      final Map<String, dynamic> backupData = {
-        'metadata': {
-          'userId': userId,
-          'backupDate': DateTime.now().toIso8601String(),
-          'totalRecipes': recipes.length,
-          'version': '1.0',
-        },
-        'recipes': jsonRecipes,
-      };
-
-      final String jsonString = JsonEncoder.withIndent(
-        '  ',
-      ).convert(backupData);
-
-      try {
-        String? outputFile = await FilePicker.platform.saveFile(
-          dialogTitle: 'Selecione onde salvar o backup:',
-          fileName:
-              'receitas_backup_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.json',
-          type: FileType.custom,
-          allowedExtensions: ['json'],
-          bytes: utf8.encode(jsonString),
-        );
-
-        if (outputFile != null) {
-          _logger.i(
-            'Backup local criado com sucesso via FilePicker',
-            error: {
-              'outputFile': outputFile,
-              'size': '${(jsonString.length / 1024).toStringAsFixed(1)} KB',
-              'recipesCount': recipes.length,
-            },
-          );
-          return "Backup local criado com sucesso!\n📍 Local: $outputFile\nTamanho: ${(jsonString.length / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas";
-        }
-      } catch (e) {
-        _logger.w(
-          'FilePicker saveFile falhou, tentando método alternativo',
-          error: e,
-        );
-      }
-
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName =
-          'receitas_backup_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.json';
-      final file = File('${directory.path}/$fileName');
-
-      await file.writeAsString(jsonString, encoding: utf8);
-
-      if (await file.exists()) {
-        final fileSize = await file.length();
-        _logger.i(
-          'Backup local criado com sucesso no diretório de documentos',
-          error: {
-            'filePath': file.path,
-            'size': '${(fileSize / 1024).toStringAsFixed(1)} KB',
-            'recipesCount': recipes.length,
-          },
-        );
-        return "Backup local criado com sucesso!\nLocal: ${file.path}\nTamanho: ${(fileSize / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas\n\nNota: Arquivo salvo na pasta de documentos do app.";
-      } else {
-        return "Erro: Arquivo não foi criado corretamente.";
-      }
-    } catch (e) {
-      _logger.e('Erro no exportRecipesToJson', error: e);
-      return "Erro ao criar backup local: ${e.toString()}";
-    }
-  }
-
-  Future<String> exportAndShareJson(BuildContext context) async {
-    try {
-      final String? userId = _getUserId(context);
-
-      if (userId == null) {
-        return "Erro: Usuário não identificado. Faça login novamente.";
-      }
-
-      final List<Receita> recipes = await _receitaRepository
-          .listarReceitasPorUsuario(userId);
-
-      if (recipes.isEmpty) {
-        return "Nenhuma receita encontrada para exportar.";
-      }
-
-      final List<Map<String, dynamic>> jsonRecipes =
-          recipes.map((recipe) => recipe.toMapCompleto()).toList();
-
-      final Map<String, dynamic> backupData = {
-        'metadata': {
-          'userId': userId,
-          'backupDate': DateTime.now().toIso8601String(),
-          'totalRecipes': recipes.length,
-          'version': '1.0',
-        },
-        'recipes': jsonRecipes,
-      };
-
-      final String jsonString = JsonEncoder.withIndent(
-        '  ',
-      ).convert(backupData);
-
-      final directory = await getTemporaryDirectory();
-      final fileName =
-          'receitas_backup_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now())}.json';
-      final file = File('${directory.path}/$fileName');
-
-      await file.writeAsString(jsonString, encoding: utf8);
-
-      _logger.i(
-        'Backup criado para compartilhamento',
-        error: {
-          'filePath': file.path,
-          'size': '${(jsonString.length / 1024).toStringAsFixed(1)} KB',
-          'recipesCount': recipes.length,
-        },
-      );
-
-      return "Backup criado e pronto para compartilhar!\nArquivo temporário: ${file.path}\nTamanho: ${(jsonString.length / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas\n\nUse o compartilhamento para salvar onde desejar.";
-    } catch (e) {
-      _logger.e('Erro no exportAndShareJson', error: e);
-      return "Erro ao criar backup: ${e.toString()}";
-    }
-  }
-
-  Future<String> importRecipesFromJson(BuildContext context) async {
-    try {
-      final String? userId = _getUserId(context);
-
-      if (userId == null) {
-        return "Erro: Usuário não identificado. Faça login novamente.";
-      }
-
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-        dialogTitle: 'Selecione o arquivo de backup',
-      );
-
-      if (result == null || result.files.isEmpty) {
-        return "Nenhum arquivo selecionado.";
-      }
-
-      String jsonString;
-
-      if (result.files.single.bytes != null) {
-        jsonString = utf8.decode(result.files.single.bytes!);
-      } else if (result.files.single.path != null) {
-        final file = File(result.files.single.path!);
-        if (!await file.exists()) {
-          return "Arquivo não encontrado.";
-        }
-        jsonString = await file.readAsString(encoding: utf8);
-      } else {
-        return "Não foi possível ler o arquivo.";
-      }
-
-      final Map<String, dynamic> backupData = jsonDecode(jsonString);
-
-      if (!backupData.containsKey('recipes')) {
-        return "Formato de backup inválido.";
-      }
-
-      final List<dynamic> recipesData = backupData['recipes'];
-      if (recipesData.isEmpty) {
-        return "Nenhuma receita encontrada no arquivo.";
-      }
-
-      int importedCount = 0;
-      int skippedCount = 0;
-      int errorCount = 0;
-
-      for (final recipeData in recipesData) {
-        try {
-          final receita = Receita.fromMap(recipeData as Map<String, dynamic>);
-
-          // Atualiza o userId da receita para o usuário atual
-          receita.userId = userId;
-
-          if (receita.ingredientes.isEmpty && receita.instrucoes.isEmpty) {
-            _logger.d(
-              'Receita ${receita.nome} não tem ingredientes nem instruções, pulando...',
-            );
-            skippedCount++;
-            continue;
-          }
-
-          bool success = await _receitaRepository.adicionarComBackup(receita);
-
-          if (success) {
-            importedCount++;
-            _logger.d(
-              'Receita ${receita.nome} importada',
-              error: {
-                'ingredientesCount': receita.ingredientes.length,
-                'instrucoesCount': receita.instrucoes.length,
-              },
-            );
-          } else {
-            errorCount++;
-          }
-        } catch (e) {
-          _logger.e('Erro ao importar receita individual', error: e);
-          errorCount++;
-        }
-      }
-
-      _logger.i(
-        'Importação de receitas concluída',
-        error: {
-          'imported': importedCount,
-          'skipped': skippedCount,
-          'errors': errorCount,
-        },
-      );
-
-      String resultado = "Importação concluída!\n";
-      resultado += "$importedCount receitas importadas com sucesso\n";
-
-      if (skippedCount > 0) {
-        resultado += "$skippedCount receitas puladas (sem dados)\n";
-      }
-
-      if (errorCount > 0) {
-        resultado += "$errorCount receitas com erro\n";
-      }
-
-      return resultado;
-    } catch (e) {
-      _logger.e('Erro no importRecipesFromJson', error: e);
-      return "Erro ao importar receitas: ${e.toString()}";
-    }
-  }
-
-  Future<String> restoreFromFirestore(
-    BuildContext context,
-    String backupId,
-  ) async {
-    try {
-      final String? userId = _getUserId(context);
-
-      if (userId == null) {
-        return "Erro: Usuário não identificado. Faça login novamente.";
-      }
-
-      final DocumentSnapshot doc =
-          await _firestore
-              .collection('backups')
-              .doc(userId)
-              .collection('user_backups')
-              .doc(backupId)
-              .get();
-
-      if (!doc.exists) {
-        return "Backup não encontrado.";
-      }
-
-      final data = doc.data() as Map<String, dynamic>;
-      final List<dynamic> recipesData = data['recipes'] ?? [];
-
-      if (recipesData.isEmpty) {
-        return "Nenhuma receita encontrada no backup.";
-      }
-
-      int restoredCount = 0;
-      int skippedCount = 0;
-      int errorCount = 0;
-
-      for (final recipeData in recipesData) {
-        try {
-          final receita = Receita.fromMap(recipeData as Map<String, dynamic>);
-
-          // Atualiza o userId da receita para o usuário atual
-          receita.userId = userId;
-
-          if (receita.ingredientes.isEmpty && receita.instrucoes.isEmpty) {
-            _logger.d(
-              'Receita ${receita.nome} não tem ingredientes nem instruções, pulando...',
-            );
-            skippedCount++;
-            continue;
-          }
-
-          bool success = await _receitaRepository.adicionarComBackup(receita);
-
-          if (success) {
-            restoredCount++;
-            _logger.d(
-              'Receita ${receita.nome} restaurada',
-              error: {
-                'ingredientesCount': receita.ingredientes.length,
-                'instrucoesCount': receita.instrucoes.length,
-              },
-            );
-          } else {
-            errorCount++;
-          }
-        } catch (e) {
-          _logger.e('Erro ao restaurar receita individual', error: e);
-          errorCount++;
-        }
-      }
-
-      _logger.i(
-        'Restauração de backup concluída',
-        error: {
-          'backupId': backupId,
-          'restored': restoredCount,
-          'skipped': skippedCount,
-          'errors': errorCount,
-        },
-      );
-
-      String resultado = "Backup restaurado com sucesso!\n";
-      resultado += "$restoredCount receitas restauradas\n";
-
-      if (skippedCount > 0) {
-        resultado += "$skippedCount receitas puladas (sem dados)\n";
-      }
-
-      if (errorCount > 0) {
-        resultado += "$errorCount receitas com erro\n";
-      }
-
-      return resultado;
-    } catch (e) {
-      _logger.e('Erro no restoreFromFirestore', error: e);
-      return "Erro ao restaurar backup: ${e.toString()}";
-    }
-  }
-
-  Future<String> backupRecipesToFirestore(BuildContext context) async {
-    try {
-      final String? userId = _getUserId(context);
-
-      if (userId == null) {
-        return "Erro: Usuário não identificado. Faça login novamente.";
-      }
-
-      final List<Receita> recipes = await _receitaRepository
-          .listarReceitasPorUsuario(userId);
-
-      if (recipes.isEmpty) {
-        return "Nenhuma receita encontrada para backup.";
-      }
-
-      final String backupId = DateFormat(
-        'yyyy-MM-dd_HH-mm-ss',
-      ).format(DateTime.now());
-
-      final backupData = {
-        'metadata': {
-          'userId': userId,
-          'backupId': backupId,
-          'criadoEm': FieldValue.serverTimestamp(),
-          'totalReceitas': recipes.length,
-          'versao': '1.0',
-        },
-        'recipes': recipes.map((recipe) => recipe.toMapCompleto()).toList(),
-      };
-
-      await _firestore
-          .collection('backups')
-          .doc(userId)
-          .collection('user_backups')
-          .doc(backupId)
-          .set(backupData);
-
-      _logger.i(
-        'Backup na nuvem criado com sucesso',
-        error: {
-          'backupId': backupId,
-          'recipesCount': recipes.length,
-          'userId': userId,
-        },
-      );
-
-      return "Backup na nuvem criado com sucesso!\nBackup ID: $backupId\n${recipes.length} receitas salvas";
-    } catch (e) {
-      _logger.e('Erro no backupRecipesToFirestore', error: e);
-      return "Erro ao fazer backup no Firestore: ${e.toString()}";
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> listFirestoreBackups(
-    BuildContext context,
-  ) async {
-    try {
-      final String? userId = _getUserId(context);
-
-      if (userId == null) {
-        _logger.e('Usuário não identificado para listar backups');
-        return [];
-      }
-
-      final QuerySnapshot snapshot =
-          await _firestore
-              .collection('backups')
-              .doc(userId)
-              .collection('user_backups')
-              .orderBy('metadata.criadoEm', descending: true)
-              .get();
-
-      _logger.i(
-        'Backups listados com sucesso',
-        error: {'userId': userId, 'backupsCount': snapshot.docs.length},
-      );
-
-      return snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return {
-          'id': doc.id,
-          'metadata': data['metadata'] ?? {},
-          'totalReceitas': data['metadata']?['totalReceitas'] ?? 0,
-        };
-      }).toList();
-    } catch (e) {
-      _logger.e('Erro ao listar backups', error: e);
-      return [];
-    }
-  }
-
-  Future<String> deleteFirestoreBackup(
-    BuildContext context,
-    String backupId,
-  ) async {
-    try {
-      final String? userId = _getUserId(context);
-
-      if (userId == null) {
-        return "Erro: Usuário não identificado. Faça login novamente.";
-      }
-
-      await _firestore
-          .collection('backups')
-          .doc(userId)
-          .collection('user_backups')
-          .doc(backupId)
-          .delete();
-
-      _logger.i(
-        'Backup deletado com sucesso',
-        error: {'backupId': backupId, 'userId': userId},
-      );
-
-      return "Backup deletado com sucesso!";
-    } catch (e) {
-      _logger.e('Erro ao deletar backup', error: e);
-      return "Erro ao deletar backup: ${e.toString()}";
     }
   }
 }
