@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:receitas_trabalho_2/services/auth_service.dart';
-import 'package:receitas_trabalho_2/services/backup_service.dart';
+import 'package:receitas_trabalho_2/services/backup/backup_service.dart';
 import 'package:receitas_trabalho_2/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as p;
