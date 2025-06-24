@@ -32,4 +32,23 @@ class LocalAuthService {
       return false;
     }
   }
+  Future<bool> canUseBiometric() async {
+    try {
+      final bool canCheckBiometrics = await _auth.canCheckBiometrics;
+      if (!canCheckBiometrics) {
+        return false;
+      }
+
+      final List<BiometricType> availableBiometrics = 
+          await _auth.getAvailableBiometrics();
+      
+      return availableBiometrics.isNotEmpty;
+    } on PlatformException catch (e) {
+      _logger.e("Erro ao verificar biometria disponível: ${e.message}");
+      return false;
+    } catch (e) {
+      _logger.e("Erro inesperado ao verificar biometria: $e");
+      return false;
+    }
+  }
 }
