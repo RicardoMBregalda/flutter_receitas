@@ -15,8 +15,6 @@ class ReceitaDetalheScreen extends StatefulWidget {
 class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
   Receita? _receita;
   bool _isLoading = true;
-  // AJUSTE: Estado temporário para os checkboxes dos ingredientes
-  late List<bool> _ingredientesMarcados;
 
   final _receitaRepository = ReceitaRepository();
 
@@ -28,11 +26,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
           ModalRoute.of(context)!.settings.arguments as Receita;
       setState(() {
         _receita = receitaInicial;
-        // Inicializa a lista de marcadores com 'false'
-        _ingredientesMarcados = List<bool>.filled(
-          receitaInicial.ingredientes.length,
-          false,
-        );
       });
       _carregarDadosCompletos();
     }
@@ -56,13 +49,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
       if (mounted) {
         setState(() {
           _receita = receitaCompleta;
-          // AJUSTE: Reinicializa os marcadores com base nos dados carregados
-          if (receitaCompleta != null) {
-            _ingredientesMarcados = List<bool>.filled(
-              receitaCompleta.ingredientes.length,
-              false,
-            );
-          }
           _isLoading = false;
         });
       }
@@ -159,7 +145,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     }
   }
 
-  // AJUSTE: Widget para o título e a descrição abaixo da imagem
   Widget _buildTituloEDescricao() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -184,7 +169,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     );
   }
 
-  // AJUSTE: Lista de ingredientes com Checkbox
   Widget _buildListaIngredientes() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -199,15 +183,10 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
             itemCount: _receita!.ingredientes.length,
             itemBuilder: (context, index) {
               final ingrediente = _receita!.ingredientes[index];
-              return CheckboxListTile(
-                controlAffinity: ListTileControlAffinity.leading,
-                title: Text('${ingrediente.nome} - ${ingrediente.quantidade}'),
-                value: _ingredientesMarcados[index],
-                onChanged: (bool? value) {
-                  setState(() {
-                    _ingredientesMarcados[index] = value!;
-                  });
-                },
+              return ListTile(
+                title: Text(
+                  '•  ${ingrediente.nome} - ${ingrediente.quantidade}',
+                ),
               );
             },
           ),
@@ -216,7 +195,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     );
   }
 
-  // AJUSTE: Lista de instruções com subtítulos
   Widget _buildListaInstrucoes() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
