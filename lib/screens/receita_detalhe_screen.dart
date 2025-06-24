@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:receitas_trabalho_2/services/auth_service.dart';
 import '/repositories/receita_repository.dart';
 import '/models/receita.dart';
-import '/screens/receita_edit_screen.dart'; // Mantido para editar dados gerais
+import '/screens/receita_edit_screen.dart'; 
 
 class ReceitaDetalheScreen extends StatefulWidget {
   const ReceitaDetalheScreen({super.key});
@@ -59,7 +59,6 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
 
   void _editarInformacoesGerais() {
     if (_receita == null) return;
-    // Navega para a tela de edição apenas para nome, nota, tempo, etc.
     Navigator.pushNamed(
       context,
       ReceitaEditScreen.routeName,
@@ -77,11 +76,9 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
     }
 
     return Scaffold(
-      // A AppBar agora é simples, sem botões de ação
       appBar: AppBar(
         title: const Text('Receita'),
         actions: [
-          // Botão para editar as informações gerais da receita (nome, nota, tempo)
           IconButton(
             icon: const Icon(Icons.edit_note),
             tooltip: 'Editar informações da receita',
@@ -99,14 +96,13 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
             _buildListaIngredientes(),
             const Divider(height: 32, indent: 16, endIndent: 16),
             _buildListaInstrucoes(),
-            const SizedBox(height: 32), // Espaço no final
+            const SizedBox(height: 32), 
           ],
         ),
       ),
     );
   }
 
-  // AJUSTE: Widget apenas para a imagem
   Widget _buildImagemReceita() {
     final String? url = _receita!.urlImagem;
     if (url == null || url.isEmpty) {

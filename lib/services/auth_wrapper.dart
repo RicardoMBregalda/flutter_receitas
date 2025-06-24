@@ -12,9 +12,9 @@ class AuthWrapper extends StatelessWidget {
     final authService = context.watch<AuthService>();
 
     if (authService.isAuthenticated) {
-      return const ReceitaListScreen(); // ou a sua tela de lista de receitas
+      return const ReceitaListScreen(); 
     } else {
-      // Se não, mostre a tela de autenticação.
+
       return const AuthScreen();
     }
   }

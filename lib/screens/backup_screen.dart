@@ -10,16 +10,14 @@ import 'package:receitas_trabalho_2/services/backup/backup_service.dart';
 import 'package:receitas_trabalho_2/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as p;
-import 'package:share_plus/share_plus.dart'; // Adicione esta dependência no pubspec.yaml
+import 'package:share_plus/share_plus.dart'; 
 
 Future<bool> requestStoragePermission() async {
   if (Platform.isAndroid) {
-    // Para Android 11+ (API 30+), não precisamos de permissão para Downloads
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     if (androidInfo.version.sdkInt >= 30) {
       return true;
     }
-    // Para versões anteriores
     final status = await Permission.storage.request();
     return status.isGranted;
   }
@@ -51,7 +49,6 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _initializeServices() async {
     try {
       await _notificationService.init();
-      // verifica se o usuário tem permissão de notificações
       final hasPermission =
           await _notificationService.hasNotificationPermission();
       if (!hasPermission) {
@@ -102,9 +99,6 @@ class _BackupScreenState extends State<BackupScreen> {
       );
     }
   }
-
-  // --- Operações Assíncronas com Isolates ---
-
   Future<void> _performCloudBackup() async {
     if (_userId == null) {
       _showMessage('Usuário não autenticado', isError: true);
@@ -113,7 +107,6 @@ class _BackupScreenState extends State<BackupScreen> {
 
     _showMessage('Backup na nuvem iniciado em segundo plano...');
 
-    // Executa em background sem bloquear a UI
     _backupService
         .backupRecipesToFirestoreAsync(userId: _userId!)
         .then((result) {
@@ -124,7 +117,7 @@ class _BackupScreenState extends State<BackupScreen> {
             );
             if (mounted) {
               _showMessage(result.message);
-              _loadCloudBackups(); // Recarrega a lista
+              _loadCloudBackups(); 
             }
           } else {
             _notificationService.showErrorNotification(
@@ -156,7 +149,6 @@ class _BackupScreenState extends State<BackupScreen> {
 
     _showMessage('Restauração iniciada em segundo plano...');
 
-    // Executa em background sem bloquear a UI
     _backupService
         .restoreFromFirestoreAsync(userId: _userId!, backupId: backupId)
         .then((result) {
@@ -199,26 +191,22 @@ class _BackupScreenState extends State<BackupScreen> {
     _showMessage('Exportação iniciada em segundo plano...');
 
     try {
-      // Opção 1: Usar um diretório temporário primeiro
       final Directory tempDir = await getTemporaryDirectory();
       final String fileName =
           'backup_receitas_${DateTime.now().millisecondsSinceEpoch}.json';
       final String tempPath = p.join(tempDir.path, fileName);
 
-      // Executa o backup para arquivo temporário
       final result = await _backupService.exportRecipesToJsonAsync(
         userId: _userId!,
         outputPath: tempPath,
       );
 
       if (result.success) {
-        // Notifica sucesso
         _notificationService.showSuccessNotification(
           operation: 'Exportação JSON',
           details: 'Backup criado com sucesso!',
         );
 
-        // Mostra diálogo com opções
         if (mounted) {
           _showExportOptionsDialog(tempPath, fileName);
         }
@@ -303,27 +291,23 @@ class _BackupScreenState extends State<BackupScreen> {
 
   Future<void> _saveToDownloads(String sourcePath, String fileName) async {
     try {
-      // Solicita permissão se necessário
       bool hasPermission = await requestStoragePermission();
       if (!hasPermission) {
         _showMessage('Permissão de armazenamento negada', isError: true);
         return;
       }
 
-      // Obtém o diretório de Downloads público
       final Directory? downloadsDir = Directory('/storage/emulated/0/Download');
 
       if (downloadsDir != null && await downloadsDir.exists()) {
         final String destinationPath = p.join(downloadsDir.path, fileName);
 
-        // Copia o arquivo para Downloads
         final File sourceFile = File(sourcePath);
         final File destinationFile = await sourceFile.copy(destinationPath);
 
         if (await destinationFile.exists()) {
           _showMessage('Arquivo salvo em: Downloads/$fileName');
 
-          // Abre o diretório de Downloads (opcional)
           _showOpenDownloadsOption(fileName);
         }
       } else {
@@ -364,13 +348,12 @@ class _BackupScreenState extends State<BackupScreen> {
     }
 
     try {
-      // Configura o FilePicker para buscar em Downloads também
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
         dialogTitle: 'Selecione o arquivo de backup',
         initialDirectory:
-            '/storage/emulated/0/Download', // Diretório inicial em Downloads
+            '/storage/emulated/0/Download', 
       );
 
       if (result == null || result.files.isEmpty) {
@@ -396,7 +379,6 @@ class _BackupScreenState extends State<BackupScreen> {
         return;
       }
 
-      // Executa em background sem bloquear a UI
       _backupService
           .importRecipesFromJsonAsync(userId: _userId!, jsonString: jsonString)
           .then((importResult) {
@@ -453,7 +435,7 @@ class _BackupScreenState extends State<BackupScreen> {
         details: result,
       );
       _showMessage(result);
-      await _loadCloudBackups(); // Recarrega a lista
+      await _loadCloudBackups(); 
     } catch (e) {
       final errorMessage = 'Erro ao excluir backup: $e';
       _notificationService.showErrorNotification(
@@ -465,8 +447,6 @@ class _BackupScreenState extends State<BackupScreen> {
       _setLoading(false);
     }
   }
-
-  // --- Build Method e Widgets ---
 
   @override
   Widget build(BuildContext context) {
@@ -490,7 +470,6 @@ class _BackupScreenState extends State<BackupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Card de Backup/Exportação
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -533,7 +512,6 @@ class _BackupScreenState extends State<BackupScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Card de Restauração/Importação
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -567,7 +545,6 @@ class _BackupScreenState extends State<BackupScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Card da lista de backups na nuvem
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),

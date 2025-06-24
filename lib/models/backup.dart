@@ -1,6 +1,5 @@
 import 'dart:isolate';
 
-/// Modelo para passar dados entre isolates durante operações de backup
 class BackupIsolateData {
   final String userId;
   final String? outputPath;
@@ -17,15 +16,11 @@ class BackupIsolateData {
   });
 }
 
-/// Modelo para representar o resultado de uma operação de backup
 class BackupResult {
-  /// Indica se a operação foi bem-sucedida
   final bool success;
   
-  /// Mensagem descritiva do resultado
   final String message;
   
-  /// Dados adicionais retornados pela operação (opcional)
   final Map<String, dynamic>? data;
 
   BackupResult({

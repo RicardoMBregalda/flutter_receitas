@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:isolate';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -7,13 +6,11 @@ import 'package:receitas_trabalho_2/models/receita.dart';
 import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
 import 'package:receitas_trabalho_2/services/backup/isolate_handlers.dart';
 
-/// Serviço responsável por operações de backup e restauração local (arquivos JSON)
+
 class LocalBackupService {
   final ReceitaRepository _receitaRepository = ReceitaRepository();
   final Logger _logger = Logger(printer: PrettyPrinter());
 
-  /// Exporta receitas do usuário para um arquivo JSON de forma assíncrona
-  /// Utiliza Isolate para não bloquear a UI durante a operação
   Future<BackupResult> exportRecipesToJsonAsync({
     required String userId,
     required String outputPath,
@@ -21,14 +18,12 @@ class LocalBackupService {
     try {
       _logger.i("Iniciando exportação para o caminho: $outputPath");
       
-      // Busca as receitas do usuário no banco de dados
       final List<Receita> recipes = await _receitaRepository.listarReceitasPorUsuario(userId);
       
       if (recipes.isEmpty) {
         return BackupResult(success: false, message: "Nenhuma receita encontrada para exportar.");
       }
 
-      // Cria um isolate para processar a exportação
       final receivePort = ReceivePort();
       await Isolate.spawn(
         IsolateHandlers.exportRecipesToJsonIsolate,
@@ -40,7 +35,6 @@ class LocalBackupService {
         },
       );
 
-      // Aguarda o resultado do isolate
       final result = await receivePort.first as BackupResult;
       return result;
     } catch (e, stackTrace) {
@@ -49,8 +43,6 @@ class LocalBackupService {
     }
   }
 
-  /// Importa receitas de um arquivo JSON de forma assíncrona
-  /// O isolate prepara os dados e a inserção no banco ocorre no isolate principal
   Future<BackupResult> importRecipesFromJsonAsync({
     required String userId,
     required String jsonString,
@@ -58,7 +50,6 @@ class LocalBackupService {
     try {
       final receivePort = ReceivePort();
 
-      // Isolate para preparar os dados do JSON
       await Isolate.spawn(
         IsolateHandlers.prepareRecipesFromJsonIsolate,
         BackupIsolateData(
@@ -68,7 +59,6 @@ class LocalBackupService {
         ),
       );
 
-      // Recebe o resultado do isolate
       final dynamic isolateResult = await receivePort.first;
 
       if (isolateResult is BackupResult && !isolateResult.success) {
@@ -80,7 +70,6 @@ class LocalBackupService {
       int skippedCount = 0;
       int errorCount = 0;
 
-      // Insere as receitas no banco de dados (isolate principal)
       for (final receita in recipesToImport) {
         try {
           bool success = await _receitaRepository.adicionarComBackup(receita);
@@ -95,7 +84,6 @@ class LocalBackupService {
         }
       }
 
-      // Monta mensagem de resultado
       String resultado = "Importação concluída!\n";
       resultado += "$importedCount receitas importadas com sucesso\n";
       if (skippedCount > 0) resultado += "$skippedCount receitas puladas\n";
@@ -112,17 +100,13 @@ class LocalBackupService {
     }
   }
 
-  /// Solicita permissão de armazenamento no Android
-  /// Para Android 11+ (API 30+) retorna true automaticamente
+
   Future<bool> solicitarPermissaoArmazenamento() async {
-    if (Platform.isAndroid) {
       final androidInfo = await _getAndroidVersion();
 
-      // Android 11+ não precisa de permissão especial para acessar Downloads
       if (androidInfo >= 30) {
         return true;
       } else {
-        // Versões anteriores precisam de permissão
         final status = await Permission.storage.status;
 
         if (status.isGranted) {
@@ -140,17 +124,12 @@ class LocalBackupService {
           return false;
         }
       }
-    }
-
-    // Para iOS e outras plataformas, retorna true
-    return true;
+      return true;
+  
   }
 
-  /// Obtém a versão do Android (simplificado)
   Future<int> _getAndroidVersion() async {
     try {
-      // Aqui você poderia usar device_info_plus para obter a versão real
-      // Por simplicidade, retornamos 30 (Android 11)
       return 30;
     } catch (e) {
       return 30;

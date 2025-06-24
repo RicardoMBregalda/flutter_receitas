@@ -9,7 +9,6 @@ class ReceitaRepository {
   final IngredienteRepository _ingredienteRepo = IngredienteRepository();
   final InstrucaoRepository _instrucaoRepo = InstrucaoRepository();
 
-  // Logger configurado
   final Logger _logger = Logger(
     printer: PrettyPrinter(
       methodCount: 2,
@@ -96,7 +95,6 @@ class ReceitaRepository {
       await _db.inserir('receita', receita.toMapSemRelacoes());
     }
 
-    // Remove ingredientes e instruções antigas
     await _ingredienteRepo.removerTodosIngredientesDeUmaReceita(
       receita.id,
       receita.userId,
@@ -106,7 +104,6 @@ class ReceitaRepository {
       receita.userId,
     );
 
-    // Adiciona novos ingredientes e instruções
     for (var ingrediente in receita.ingredientes) {
       ingrediente.receitaId = receita.id;
       await _ingredienteRepo.adicionar(ingrediente);
@@ -174,7 +171,6 @@ class ReceitaRepository {
     );
 
     try {
-      // Remove instruções e ingredientes primeiro
       await _instrucaoRepo.removerTodasInstrucoesDeUmaReceita(
         receitaId,
         userId,
@@ -184,7 +180,6 @@ class ReceitaRepository {
         userId,
       );
 
-      // Remove a receita
       int result = await _db.remover(
         "receita",
         condicao: 'id = ? AND userId = ?',
@@ -235,7 +230,6 @@ class ReceitaRepository {
           'Receita atualizada, removendo ingredientes e instruções antigas',
         );
 
-        // Remove ingredientes e instruções antigas
         await _instrucaoRepo.removerTodasInstrucoesDeUmaReceita(
           receita.id,
           userId,
@@ -245,7 +239,6 @@ class ReceitaRepository {
           userId,
         );
 
-        // Adiciona novos ingredientes e instruções
         for (var ingrediente in receita.ingredientes) {
           ingrediente.receitaId = receita.id;
           await _ingredienteRepo.adicionar(ingrediente);

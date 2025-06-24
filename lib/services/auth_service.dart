@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Esta é a nossa única fonte da verdade para autenticação.
-// Ela usa o Firebase e notifica a UI sobre as mudanças.
+
 class AuthService with ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   User? _user;

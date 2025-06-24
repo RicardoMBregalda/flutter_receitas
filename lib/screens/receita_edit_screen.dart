@@ -15,7 +15,6 @@ class ReceitaEditScreen extends StatefulWidget {
   State<ReceitaEditScreen> createState() => _ReceitaEditScreenState();
 }
 
-// Classe auxiliar para gerenciar os controllers de cada ingrediente
 class _IngredienteFieldState {
   final TextEditingController nomeController;
   final TextEditingController qtdController;
@@ -33,38 +32,32 @@ class _IngredienteFieldState {
 class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _uuid = const Uuid();
-  late Receita _receitaOriginal; // Armazena a receita original
+  late Receita _receitaOriginal; 
 
-  // Controllers para os campos principais da receita
   final _nomeController = TextEditingController();
   final _notaController = TextEditingController();
   final _tempoController = TextEditingController();
   final _urlController = TextEditingController();
   final _descricaoController = TextEditingController();
 
-  // Listas para gerenciar os controllers dos campos dinâmicos
   final List<_IngredienteFieldState> _ingredienteFields = [];
   final List<TextEditingController> _instrucaoControllers = [];
 
-  // Flag para garantir que a inicialização ocorra apenas uma vez
   bool _isInitialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Carrega os dados da receita apenas na primeira vez que o widget é construído
     if (!_isInitialized) {
       final receita = ModalRoute.of(context)!.settings.arguments as Receita;
       _receitaOriginal = receita;
 
-      // Preenche os controllers com os dados da receita
       _nomeController.text = receita.nome;
       _notaController.text = receita.nota.toString();
       _tempoController.text = receita.tempoPreparo;
       _urlController.text = receita.urlImagem ?? '';
       _descricaoController.text = receita.descricao ?? '';
 
-      // Cria controllers para os ingredientes existentes
       for (var ingrediente in receita.ingredientes) {
         _ingredienteFields.add(
           _IngredienteFieldState(
@@ -74,14 +67,12 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
         );
       }
 
-      // Cria controllers para as instruções existentes
       for (var instrucao in receita.instrucoes) {
         _instrucaoControllers.add(
           TextEditingController(text: instrucao.instrucao),
         );
       }
 
-      // Garante que haja pelo menos um campo se a lista estiver vazia
       if (_ingredienteFields.isEmpty) _addIngredienteField(silent: true);
       if (_instrucaoControllers.isEmpty) _addInstrucaoField(silent: true);
 
@@ -91,7 +82,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
 
   @override
   void dispose() {
-    // Limpa todos os controllers para evitar memory leaks
     _nomeController.dispose();
     _notaController.dispose();
     _tempoController.dispose();
@@ -107,7 +97,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
     super.dispose();
   }
 
-  // Funções para adicionar e remover campos dinamicamente
   void _addIngredienteField({bool silent = false}) {
     action() => _ingredienteFields.add(_IngredienteFieldState());
     silent ? action() : setState(action);
@@ -132,7 +121,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
     });
   }
 
-  // Método de submissão para salvar as alterações
   void _onSave() async {
     if (_formKey.currentState!.validate()) {
       final userId = Provider.of<AuthService>(context, listen: false).userId;
@@ -143,7 +131,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
         return;
       }
 
-      // Converte os controllers de volta para a lista de Ingredientes
       final List<Ingrediente> ingredientes =
           _ingredienteFields
               .where((field) => field.nomeController.text.trim().isNotEmpty)
@@ -158,7 +145,6 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
               )
               .toList();
 
-      // Converte os controllers de volta para a lista de Instrucoes
       final List<Instrucao> instrucoes =
           _instrucaoControllers
               .map((controller) => controller.text.trim())
@@ -174,19 +160,18 @@ class _ReceitaEditScreenState extends State<ReceitaEditScreen> {
               .toList();
 
       final receitaEditada = Receita(
-        id: _receitaOriginal.id, // Mantém o ID original
+        id: _receitaOriginal.id, 
         nome: _nomeController.text.trim(),
         nota: int.parse(_notaController.text),
         tempoPreparo: _tempoController.text.trim(),
         urlImagem: _urlController.text.trim(),
         descricao: _descricaoController.text.trim(),
         userId: userId,
-        criadoEm: _receitaOriginal.criadoEm, // Mantém a data de criação
+        criadoEm: _receitaOriginal.criadoEm, 
         ingredientes: ingredientes,
         instrucoes: instrucoes,
       );
 
-      // O repositório deve ser capaz de lidar com a atualização da receita e suas sub-listas
       await ReceitaRepository().editar(receitaEditada, userId);
       if (!mounted) return;
       Navigator.pop(context, receitaEditada);

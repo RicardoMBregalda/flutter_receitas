@@ -120,7 +120,7 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
       final List<Instrucao> instrucoes =
           _instrucaoControllers
               .map((controller) => controller.text.trim())
-              .where((desc) => desc.isNotEmpty) // Ignora campos vazios
+              .where((desc) => desc.isNotEmpty) 
               .map(
                 (desc) => Instrucao(
                   id: _uuid.v4(),
@@ -140,8 +140,8 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
         urlImagem: _urlController.text.trim(),
         userId: userId,
         criadoEm: DateTime.now().toIso8601String(),
-        ingredientes: ingredientes, // Adiciona a lista de ingredientes
-        instrucoes: instrucoes, // Adiciona a lista de instruções
+        ingredientes: ingredientes, 
+        instrucoes: instrucoes, 
       );
 
       await ReceitaRepository().adicionar(receita);
@@ -152,7 +152,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // AJUSTE: O código que estava aqui foi removido por ser desnecessário na tela de criação.
     return Scaffold(
       appBar: AppBar(title: const Text('Nova Receita')),
       body: SingleChildScrollView(
@@ -162,7 +161,6 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // CAMPOS PRINCIPAIS (Nome, Nota, etc.)
               Text(
                 'Informações da Receita',
                 style: Theme.of(context).textTheme.titleLarge,
@@ -286,9 +284,8 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Campo para o NOME do ingrediente
                   Expanded(
-                    flex: 3, // Ocupa mais espaço
+                    flex: 3,
                     child: TextFormField(
                       controller: fieldState.nomeController,
                       decoration: InputDecoration(
@@ -297,9 +294,8 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Campo para a QUANTIDADE
                   Expanded(
-                    flex: 2, // Ocupa menos espaço
+                    flex: 2, 
                     child: TextFormField(
                       controller: fieldState.qtdController,
                       decoration: const InputDecoration(

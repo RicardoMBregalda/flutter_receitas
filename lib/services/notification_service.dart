@@ -1,4 +1,3 @@
-// lib/services/notification_service.dart
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
 
@@ -12,7 +11,6 @@ class NotificationService {
 
   bool _isInitialized = false;
 
-  /// Inicializa o serviço de notificações para Android
   Future<void> init() async {
     if (_isInitialized) return;
 
@@ -35,13 +33,10 @@ class NotificationService {
     }
   }
 
-  /// Callback chamado quando o usuário toca na notificação
   void _onNotificationTap(NotificationResponse response) {
     debugPrint('Notificação tocada: ${response.payload}');
-    // Aqui você pode implementar navegação ou outras ações
   }
 
-  /// Solicita permissões de notificação (Android 13+)
   Future<bool> requestPermissions() async {
     if (!_isInitialized) await init();
 
@@ -60,7 +55,6 @@ class NotificationService {
     return false;
   }
 
-  /// Mostra uma notificação
   Future<void> showNotification({
     required String title,
     required String body,
@@ -100,7 +94,6 @@ class NotificationService {
     }
   }
 
-  /// Mostra notificação de sucesso para backup/restauração
   Future<void> showSuccessNotification({
     required String operation,
     String? details,
@@ -112,7 +105,6 @@ class NotificationService {
     );
   }
 
-  /// Mostra notificação de erro para backup/restauração
   Future<void> showErrorNotification({
     required String operation,
     required String error,
@@ -124,17 +116,14 @@ class NotificationService {
     );
   }
 
-  /// Cancela uma notificação específica
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
   }
 
-  /// Cancela todas as notificações
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
   }
 
-  /// Verifica se as notificações estão habilitadas
   Future<bool> areNotificationsEnabled() async {
     if (!_isInitialized) await init();
 

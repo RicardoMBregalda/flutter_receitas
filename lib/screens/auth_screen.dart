@@ -26,13 +26,10 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  // Método principal para submeter o formulário de login ou registro
   Future<void> _submit() async {
-    // Valida o formulário. Se inválido, não faz nada.
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    // Salva o estado atual do formulário
     _formKey.currentState!.save();
 
     setState(() {
@@ -154,7 +151,6 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    // Campo de Nome (Aparece apenas no modo de registro)
                     if (!_isLoginMode)
                       TextFormField(
                         key: const ValueKey('nome'),
@@ -169,7 +165,6 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     const SizedBox(height: 12),
 
-                    // Campo de E-mail
                     TextFormField(
                       key: const ValueKey('email'),
                       controller: _emailController,
@@ -184,7 +179,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Campo de Senha
                     TextFormField(
                       key: const ValueKey('senha'),
                       controller: _senhaController,
@@ -199,7 +193,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Se estiver carregando, mostra o indicador, senão, o botão
                     if (_isLoading)
                       const CircularProgressIndicator()
                     else

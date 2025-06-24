@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // AJUSTE: Importe o Provider
+import 'package:provider/provider.dart';
 import 'package:receitas_trabalho_2/screens/backup_screen.dart';
 import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
 import 'package:receitas_trabalho_2/services/local_auth_service.dart';
-import '/services/auth_service.dart'; // AJUSTE: Importe seu AuthService
+import '/services/auth_service.dart'; 
 import '/services/receita_service.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
@@ -94,11 +94,9 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   );
 
   if (confirmar == true) {
-    // Verificar se o usuário tem biometria configurada
     final canUseBiometric = await _localAuthService.canUseBiometric();
     
     if (canUseBiometric) {
-      // Se tem biometria configurada, solicitar autenticação
       final isAuthenticated = await _localAuthService.authenticate(
         'Autentique-se para excluir a receita',
       );
@@ -159,12 +157,12 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     }
   }
 
-void _abrirTelaBackup() async {  // Adicionar async aqui
+void _abrirTelaBackup() async {  
   final userId = Provider.of<AuthService>(context, listen: false).userId;
   if (userId == null) return;
 
-  await Navigator.pushNamed(context, BackupScreen.routeName);  // Adicionar await aqui
-  _carregarReceitas();  // Agora será executado após retornar
+  await Navigator.pushNamed(context, BackupScreen.routeName);  
+  _carregarReceitas(); 
 }
 
   void verDetalhes(Receita receita) async {
