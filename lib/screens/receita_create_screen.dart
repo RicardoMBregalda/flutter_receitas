@@ -135,6 +135,7 @@ class _ReceitaCreateScreenState extends State<ReceitaCreateScreen> {
         id: _uuid.v4(),
         nome: _nomeController.text.trim(),
         nota: int.parse(_notaController.text),
+        descricao: _descricaoController.text.trim(),
         tempoPreparo: _tempoController.text.trim(),
         urlImagem: _urlController.text.trim(),
         userId: userId,
