@@ -159,13 +159,13 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     }
   }
 
-  void _abrirTelaBackup() {
-    final userId = Provider.of<AuthService>(context, listen: false).userId;
-    if (userId == null) return;
+void _abrirTelaBackup() async {  // Adicionar async aqui
+  final userId = Provider.of<AuthService>(context, listen: false).userId;
+  if (userId == null) return;
 
-    Navigator.pushNamed(context, BackupScreen.routeName);
-    _carregarReceitas();
-  }
+  await Navigator.pushNamed(context, BackupScreen.routeName);  // Adicionar await aqui
+  _carregarReceitas();  // Agora será executado após retornar
+}
 
   void verDetalhes(Receita receita) async {
     await Navigator.pushNamed(
