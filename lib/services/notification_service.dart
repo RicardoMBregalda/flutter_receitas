@@ -152,4 +152,22 @@ class NotificationService {
 
     return false;
   }
+
+  hasNotificationPermission() {
+    return _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.areNotificationsEnabled() ??
+        Future.value(false);
+  }
+
+  requestNotificationPermission() {
+    return _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.requestNotificationsPermission() ??
+        Future.value(false);
+  }
 }

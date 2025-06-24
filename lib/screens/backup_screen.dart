@@ -52,6 +52,12 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _initializeServices() async {
     try {
       await _notificationService.init();
+      // verifica se o usuário tem permissão de notificações
+      final hasPermission = await _notificationService.hasNotificationPermission();
+      if (!hasPermission) {
+        await _notificationService.requestNotificationPermission();
+      }
+      
     } catch (e) {
       debugPrint('Erro ao inicializar serviços: $e');
     }
