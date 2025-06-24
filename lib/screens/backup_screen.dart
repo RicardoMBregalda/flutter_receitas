@@ -40,7 +40,6 @@ class _BackupScreenState extends State<BackupScreen> {
   final NotificationService _notificationService = NotificationService();
   bool _isLoading = false;
   List<Map<String, dynamic>> _cloudBackups = [];
-  String _currentOperation = '';
 
   @override
   void initState() {
@@ -53,11 +52,11 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       await _notificationService.init();
       // verifica se o usuário tem permissão de notificações
-      final hasPermission = await _notificationService.hasNotificationPermission();
+      final hasPermission =
+          await _notificationService.hasNotificationPermission();
       if (!hasPermission) {
         await _notificationService.requestNotificationPermission();
       }
-      
     } catch (e) {
       debugPrint('Erro ao inicializar serviços: $e');
     }
@@ -66,11 +65,10 @@ class _BackupScreenState extends State<BackupScreen> {
   String? get _userId =>
       Provider.of<AuthService>(context, listen: false).userId;
 
-  void _setLoading(bool loading, [String operation = '']) {
+  void _setLoading(bool loading) {
     if (mounted) {
       setState(() {
         _isLoading = loading;
-        _currentOperation = operation;
       });
     }
   }
@@ -78,7 +76,7 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _loadCloudBackups() async {
     if (_userId == null) return;
 
-    _setLoading(true, 'Carregando backups...');
+    _setLoading(true);
     try {
       final backups = await _backupService.listFirestoreBackups(
         userId: _userId!,
@@ -116,35 +114,38 @@ class _BackupScreenState extends State<BackupScreen> {
     _showMessage('Backup na nuvem iniciado em segundo plano...');
 
     // Executa em background sem bloquear a UI
-    _backupService.backupRecipesToFirestoreAsync(userId: _userId!).then((result) {
-      if (result.success) {
-        _notificationService.showSuccessNotification(
-          operation: 'Backup na Nuvem',
-          details: result.message,
-        );
-        if (mounted) {
-          _showMessage(result.message);
-          _loadCloudBackups(); // Recarrega a lista
-        }
-      } else {
-        _notificationService.showErrorNotification(
-          operation: 'Backup na Nuvem',
-          error: result.message,
-        );
-        if (mounted) {
-          _showMessage(result.message, isError: true);
-        }
-      }
-    }).catchError((e) {
-      final errorMessage = 'Erro ao fazer backup na nuvem: $e';
-      _notificationService.showErrorNotification(
-        operation: 'Backup na Nuvem',
-        error: errorMessage,
-      );
-      if (mounted) {
-        _showMessage(errorMessage, isError: true);
-      }
-    });
+    _backupService
+        .backupRecipesToFirestoreAsync(userId: _userId!)
+        .then((result) {
+          if (result.success) {
+            _notificationService.showSuccessNotification(
+              operation: 'Backup na Nuvem',
+              details: result.message,
+            );
+            if (mounted) {
+              _showMessage(result.message);
+              _loadCloudBackups(); // Recarrega a lista
+            }
+          } else {
+            _notificationService.showErrorNotification(
+              operation: 'Backup na Nuvem',
+              error: result.message,
+            );
+            if (mounted) {
+              _showMessage(result.message, isError: true);
+            }
+          }
+        })
+        .catchError((e) {
+          final errorMessage = 'Erro ao fazer backup na nuvem: $e';
+          _notificationService.showErrorNotification(
+            operation: 'Backup na Nuvem',
+            error: errorMessage,
+          );
+          if (mounted) {
+            _showMessage(errorMessage, isError: true);
+          }
+        });
   }
 
   Future<void> _performCloudRestore(String backupId) async {
@@ -156,37 +157,37 @@ class _BackupScreenState extends State<BackupScreen> {
     _showMessage('Restauração iniciada em segundo plano...');
 
     // Executa em background sem bloquear a UI
-    _backupService.restoreFromFirestoreAsync(
-      userId: _userId!,
-      backupId: backupId,
-    ).then((result) {
-      if (result.success) {
-        _notificationService.showSuccessNotification(
-          operation: 'Restauração da Nuvem',
-          details: result.message,
-        );
-        if (mounted) {
-          _showMessage(result.message);
-        }
-      } else {
-        _notificationService.showErrorNotification(
-          operation: 'Restauração da Nuvem',
-          error: result.message,
-        );
-        if (mounted) {
-          _showMessage(result.message, isError: true);
-        }
-      }
-    }).catchError((e) {
-      final errorMessage = 'Erro ao restaurar backup: $e';
-      _notificationService.showErrorNotification(
-        operation: 'Restauração da Nuvem',
-        error: errorMessage,
-      );
-      if (mounted) {
-        _showMessage(errorMessage, isError: true);
-      }
-    });
+    _backupService
+        .restoreFromFirestoreAsync(userId: _userId!, backupId: backupId)
+        .then((result) {
+          if (result.success) {
+            _notificationService.showSuccessNotification(
+              operation: 'Restauração da Nuvem',
+              details: result.message,
+            );
+            if (mounted) {
+              _showMessage(result.message);
+            }
+          } else {
+            _notificationService.showErrorNotification(
+              operation: 'Restauração da Nuvem',
+              error: result.message,
+            );
+            if (mounted) {
+              _showMessage(result.message, isError: true);
+            }
+          }
+        })
+        .catchError((e) {
+          final errorMessage = 'Erro ao restaurar backup: $e';
+          _notificationService.showErrorNotification(
+            operation: 'Restauração da Nuvem',
+            error: errorMessage,
+          );
+          if (mounted) {
+            _showMessage(errorMessage, isError: true);
+          }
+        });
   }
 
   Future<void> _performExportToJson() async {
@@ -200,7 +201,8 @@ class _BackupScreenState extends State<BackupScreen> {
     try {
       // Opção 1: Usar um diretório temporário primeiro
       final Directory tempDir = await getTemporaryDirectory();
-      final String fileName = 'backup_receitas_${DateTime.now().millisecondsSinceEpoch}.json';
+      final String fileName =
+          'backup_receitas_${DateTime.now().millisecondsSinceEpoch}.json';
       final String tempPath = p.join(tempDir.path, fileName);
 
       // Executa o backup para arquivo temporário
@@ -210,7 +212,6 @@ class _BackupScreenState extends State<BackupScreen> {
       );
 
       if (result.success) {
-
         // Notifica sucesso
         _notificationService.showSuccessNotification(
           operation: 'Exportação JSON',
@@ -294,10 +295,7 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _shareFile(String filePath, String fileName) async {
     try {
       final XFile file = XFile(filePath);
-      await Share.shareXFiles(
-        [file],
-        text: 'Backup de Receitas - $fileName',
-      );
+      await Share.shareXFiles([file], text: 'Backup de Receitas - $fileName');
     } catch (e) {
       _showMessage('Erro ao compartilhar arquivo: $e', isError: true);
     }
@@ -314,24 +312,25 @@ class _BackupScreenState extends State<BackupScreen> {
 
       // Obtém o diretório de Downloads público
       final Directory? downloadsDir = Directory('/storage/emulated/0/Download');
-      
+
       if (downloadsDir != null && await downloadsDir.exists()) {
         final String destinationPath = p.join(downloadsDir.path, fileName);
-        
+
         // Copia o arquivo para Downloads
         final File sourceFile = File(sourcePath);
         final File destinationFile = await sourceFile.copy(destinationPath);
-        
+
         if (await destinationFile.exists()) {
-          _showMessage(
-            'Arquivo salvo em: Downloads/$fileName',
-          );
-          
+          _showMessage('Arquivo salvo em: Downloads/$fileName');
+
           // Abre o diretório de Downloads (opcional)
           _showOpenDownloadsOption(fileName);
         }
       } else {
-        _showMessage('Não foi possível acessar a pasta Downloads', isError: true);
+        _showMessage(
+          'Não foi possível acessar a pasta Downloads',
+          isError: true,
+        );
       }
     } catch (e) {
       _showMessage('Erro ao salvar em Downloads: $e', isError: true);
@@ -370,7 +369,8 @@ class _BackupScreenState extends State<BackupScreen> {
         type: FileType.custom,
         allowedExtensions: ['json'],
         dialogTitle: 'Selecione o arquivo de backup',
-        initialDirectory: '/storage/emulated/0/Download', // Diretório inicial em Downloads
+        initialDirectory:
+            '/storage/emulated/0/Download', // Diretório inicial em Downloads
       );
 
       if (result == null || result.files.isEmpty) {
@@ -397,37 +397,37 @@ class _BackupScreenState extends State<BackupScreen> {
       }
 
       // Executa em background sem bloquear a UI
-      _backupService.importRecipesFromJsonAsync(
-        userId: _userId!,
-        jsonString: jsonString,
-      ).then((importResult) {
-        if (importResult.success) {
-          _notificationService.showSuccessNotification(
-            operation: 'Importação JSON',
-            details: importResult.message,
-          );
-          if (mounted) {
-            _showMessage(importResult.message);
-          }
-        } else {
-          _notificationService.showErrorNotification(
-            operation: 'Importação JSON',
-            error: importResult.message,
-          );
-          if (mounted) {
-            _showMessage(importResult.message, isError: true);
-          }
-        }
-      }).catchError((e) {
-        final errorMessage = 'Erro ao importar de JSON: $e';
-        _notificationService.showErrorNotification(
-          operation: 'Importação JSON',
-          error: errorMessage,
-        );
-        if (mounted) {
-          _showMessage(errorMessage, isError: true);
-        }
-      });
+      _backupService
+          .importRecipesFromJsonAsync(userId: _userId!, jsonString: jsonString)
+          .then((importResult) {
+            if (importResult.success) {
+              _notificationService.showSuccessNotification(
+                operation: 'Importação JSON',
+                details: importResult.message,
+              );
+              if (mounted) {
+                _showMessage(importResult.message);
+              }
+            } else {
+              _notificationService.showErrorNotification(
+                operation: 'Importação JSON',
+                error: importResult.message,
+              );
+              if (mounted) {
+                _showMessage(importResult.message, isError: true);
+              }
+            }
+          })
+          .catchError((e) {
+            final errorMessage = 'Erro ao importar de JSON: $e';
+            _notificationService.showErrorNotification(
+              operation: 'Importação JSON',
+              error: errorMessage,
+            );
+            if (mounted) {
+              _showMessage(errorMessage, isError: true);
+            }
+          });
     } catch (e) {
       final errorMessage = 'Erro ao importar de JSON: $e';
       _showMessage(errorMessage, isError: true);
@@ -440,7 +440,7 @@ class _BackupScreenState extends State<BackupScreen> {
       return;
     }
 
-    _setLoading(true, 'Excluindo backup...');
+    _setLoading(true);
 
     try {
       final result = await _backupService.deleteFirestoreBackup(
@@ -490,34 +490,6 @@ class _BackupScreenState extends State<BackupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Indicador de operação atual
-            if (_isLoading && _currentOperation.isNotEmpty)
-              Card(
-                color: Theme.of(context).primaryColor,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          _currentOperation,
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            if (_isLoading && _currentOperation.isNotEmpty)
-              const SizedBox(height: 16),
-
             // Card de Backup/Exportação
             Card(
               child: Padding(
@@ -620,7 +592,7 @@ class _BackupScreenState extends State<BackupScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (_isLoading && _currentOperation.contains('Carregando'))
+                    if (_isLoading)
                       const Center(child: CircularProgressIndicator())
                     else if (_cloudBackups.isEmpty)
                       const Center(
@@ -656,31 +628,32 @@ class _BackupScreenState extends State<BackupScreen> {
                                     _confirmDelete(backup['id']);
                                   }
                                 },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'restore',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.restore),
-                                        SizedBox(width: 8),
-                                        Text('Restaurar'),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.delete_outline,
-                                          color: Colors.red,
+                                itemBuilder:
+                                    (context) => [
+                                      const PopupMenuItem(
+                                        value: 'restore',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.restore),
+                                            SizedBox(width: 8),
+                                            Text('Restaurar'),
+                                          ],
                                         ),
-                                        SizedBox(width: 8),
-                                        Text('Excluir'),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.red,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text('Excluir'),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                               ),
                             ),
                           );
@@ -699,9 +672,10 @@ class _BackupScreenState extends State<BackupScreen> {
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return 'Data desconhecida';
     try {
-      final DateTime date = (timestamp is Timestamp)
-          ? timestamp.toDate()
-          : DateTime.parse(timestamp as String);
+      final DateTime date =
+          (timestamp is Timestamp)
+              ? timestamp.toDate()
+              : DateTime.parse(timestamp as String);
       return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return 'Data inválida';
@@ -711,26 +685,27 @@ class _BackupScreenState extends State<BackupScreen> {
   void _confirmDelete(String backupId) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar Exclusão'),
-        content: const Text(
-          'Tem certeza que deseja deletar este backup? Esta ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirmar Exclusão'),
+            content: const Text(
+              'Tem certeza que deseja deletar este backup? Esta ação não pode ser desfeita.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _performDeleteFromFirestore(backupId);
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Excluir'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _performDeleteFromFirestore(backupId);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Excluir'),
-          ),
-        ],
-      ),
     );
   }
 }
