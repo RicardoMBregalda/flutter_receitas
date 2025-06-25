@@ -312,8 +312,6 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
         type: FileType.custom,
         allowedExtensions: ['json'],
         dialogTitle: 'Selecione o arquivo de backup',
-        initialDirectory:
-            '/storage/emulated/0/Download', 
       );
 
       if (result == null || result.files.isEmpty) {
