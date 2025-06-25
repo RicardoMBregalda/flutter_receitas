@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:logger/logger.dart';
 
 class AuthService with ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -28,10 +28,8 @@ class AuthService with ChangeNotifier {
       switch (e.code) {
         case 'user-not-found':
           return 'Nenhum usuário encontrado para este e-mail.';
-        case 'wrong-password':
-          return 'Senha incorreta.';
-        case 'invalid-email':
-          return 'O formato do e-mail é inválido.';
+        case 'invalid-credential':
+          return 'E-mail ou senha incorretos.';
         default:
           return 'Ocorreu um erro. Tente novamente.';
       }
