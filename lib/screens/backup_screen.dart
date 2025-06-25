@@ -103,9 +103,6 @@ class _BackupScreenState extends State<BackupScreen> {
       _showMessage('Usuário não autenticado', isError: true);
       return;
     }
-
-    _showMessage('Backup na nuvem iniciado em segundo plano...');
-
     _backupService
         .backupRecipesToFirestoreAsync(userId: _userId!)
         .then((result) {
@@ -115,7 +112,6 @@ class _BackupScreenState extends State<BackupScreen> {
               details: result.message,
             );
             if (mounted) {
-              _showMessage(result.message);
               _loadCloudBackups(); 
             }
           } else {
@@ -123,9 +119,6 @@ class _BackupScreenState extends State<BackupScreen> {
               operation: 'Backup na Nuvem',
               error: result.message,
             );
-            if (mounted) {
-              _showMessage(result.message, isError: true);
-            }
           }
         })
         .catchError((e) {
@@ -145,9 +138,6 @@ class _BackupScreenState extends State<BackupScreen> {
       _showMessage('Usuário não autenticado', isError: true);
       return;
     }
-
-    _showMessage('Restauração iniciada em segundo plano...');
-
     _backupService
         .restoreFromFirestoreAsync(userId: _userId!, backupId: backupId)
         .then((result) {
@@ -156,17 +146,12 @@ class _BackupScreenState extends State<BackupScreen> {
               operation: 'Restauração da Nuvem',
               details: "Restauração concluída com sucesso!",
             );
-            if (mounted) {
-              _showMessage("Restauração concluída com sucesso!");
-            }
+  
           } else {
             _notificationService.showErrorNotification(
               operation: 'Restauração da Nuvem',
               error: result.message,
             );
-            if (mounted) {
-              _showMessage(result.message, isError: true);
-            }
           }
         })
         .catchError((e) {
@@ -175,9 +160,6 @@ class _BackupScreenState extends State<BackupScreen> {
             operation: 'Restauração da Nuvem',
             error: errorMessage,
           );
-          if (mounted) {
-            _showMessage(errorMessage, isError: true);
-          }
         });
   }
 
@@ -186,9 +168,6 @@ class _BackupScreenState extends State<BackupScreen> {
       _showMessage('Usuário não autenticado', isError: true);
       return;
     }
-
-    _showMessage('Exportação iniciada em segundo plano...');
-
     try {
       final Directory tempDir = await getTemporaryDirectory();
       final String fileName =
@@ -214,9 +193,6 @@ class _BackupScreenState extends State<BackupScreen> {
           operation: 'Exportação JSON',
           error: result.message,
         );
-        if (mounted) {
-          _showMessage(result.message, isError: true);
-        }
       }
     } catch (e) {
       final errorMessage = 'Erro ao exportar para JSON: $e';
@@ -224,9 +200,6 @@ class _BackupScreenState extends State<BackupScreen> {
         operation: 'Exportação JSON',
         error: errorMessage,
       );
-      if (mounted) {
-        _showMessage(errorMessage, isError: true);
-      }
     }
   }
 
@@ -282,14 +255,12 @@ Future<void> _saveToCustomDirectory(String sourcePath, String fileName) async {
     if (selectedDirectory == null) {
       return;
     }
-
     final String destinationPath = p.join(selectedDirectory, fileName);
 
     final File sourceFile = File(sourcePath);
     final File destinationFile = await sourceFile.copy(destinationPath);
 
     if (await destinationFile.exists()) {
-      _showMessage('Arquivo salvo em: $destinationPath');
       _showOpenCustomLocationOption(fileName, selectedDirectory);
     } else {
       _showMessage('Erro: Arquivo não foi salvo corretamente', isError: true);
@@ -350,8 +321,6 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
         return;
       }
 
-      _showMessage('Importação iniciada em segundo plano...');
-
       String jsonString;
 
       if (result.files.single.bytes != null) {
@@ -376,17 +345,11 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
                 operation: 'Importação JSON',
                 details: "Importação concluída com sucesso!",
               );
-              if (mounted) {
-                _showMessage("Importação concluída com sucesso!");
-              }
             } else {
               _notificationService.showErrorNotification(
                 operation: 'Importação JSON',
                 error: importResult.message,
               );
-              if (mounted) {
-                _showMessage(importResult.message, isError: true);
-              }
             }
           })
           .catchError((e) {
@@ -395,9 +358,6 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
               operation: 'Importação JSON',
               error: errorMessage,
             );
-            if (mounted) {
-              _showMessage(errorMessage, isError: true);
-            }
           });
     } catch (e) {
       final errorMessage = 'Erro ao importar de JSON: $e';
@@ -423,7 +383,6 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
         operation: 'Exclusão de Backup',
         details: result,
       );
-      _showMessage(result);
       await _loadCloudBackups(); 
     } catch (e) {
       final errorMessage = 'Erro ao excluir backup: $e';
@@ -431,7 +390,6 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
         operation: 'Exclusão de Backup',
         error: errorMessage,
       );
-      _showMessage(errorMessage, isError: true);
     } finally {
       _setLoading(false);
     }
