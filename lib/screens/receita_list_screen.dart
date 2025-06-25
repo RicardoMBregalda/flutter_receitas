@@ -168,6 +168,7 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
       ),
     );
     if (confirmar != true) return;
+    if (!mounted) return;
     await Provider.of<AuthService>(context, listen: false).logout();
     if (mounted) {
       ScaffoldMessenger.of(context)

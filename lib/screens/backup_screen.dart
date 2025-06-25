@@ -10,7 +10,6 @@ import 'package:receitas_trabalho_2/services/backup/backup_service.dart';
 import 'package:receitas_trabalho_2/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as p;
-import 'package:share_plus/share_plus.dart'; 
 
 Future<bool> requestStoragePermission() async {
   if (Platform.isAndroid) {
@@ -257,14 +256,6 @@ class _BackupScreenState extends State<BackupScreen> {
               },
               child: const Text('Fechar'),
             ),
-            ElevatedButton.icon(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _shareFile(filePath, fileName);
-              },
-              icon: const Icon(Icons.share),
-              label: const Text('Compartilhar'),
-            ),
             if (Platform.isAndroid)
               ElevatedButton.icon(
                 onPressed: () async {
@@ -280,15 +271,6 @@ class _BackupScreenState extends State<BackupScreen> {
     );
   }
 
-  Future<void> _shareFile(String filePath, String fileName) async {
-    try {
-      final XFile file = XFile(filePath);
-      await Share.shareXFiles([file], text: 'Backup de Receitas - $fileName');
-    } catch (e) {
-      _showMessage('Erro ao compartilhar arquivo: $e', isError: true);
-    }
-  }
-
   Future<void> _saveToDownloads(String sourcePath, String fileName) async {
     try {
       bool hasPermission = await requestStoragePermission();
@@ -297,9 +279,9 @@ class _BackupScreenState extends State<BackupScreen> {
         return;
       }
 
-      final Directory? downloadsDir = Directory('/storage/emulated/0/Download');
+      final Directory downloadsDir = Directory('/storage/emulated/0/Download');
 
-      if (downloadsDir != null && await downloadsDir.exists()) {
+      if (await downloadsDir.exists()) {
         final String destinationPath = p.join(downloadsDir.path, fileName);
 
         final File sourceFile = File(sourcePath);
