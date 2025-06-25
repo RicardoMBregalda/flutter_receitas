@@ -149,6 +149,25 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   }
 
   void _signOut() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar saída'),
+        content: const Text('Deseja realmente sair?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
     await Provider.of<AuthService>(context, listen: false).logout();
     if (mounted) {
       ScaffoldMessenger.of(context)
