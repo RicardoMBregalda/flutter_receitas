@@ -231,97 +231,104 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   void _showExportOptionsDialog(String filePath, String fileName) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Backup Exportado com Sucesso!'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Arquivo: $fileName'),
-              const SizedBox(height: 16),
-              const Text(
-                'O que você deseja fazer com o backup?',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Backup Exportado com Sucesso!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Arquivo: $fileName'),
+            const SizedBox(height: 16),
+            const Text(
+              'O que você deseja fazer com o backup?',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Fechar'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Fechar'),
-            ),
-            if (Platform.isAndroid)
-              ElevatedButton.icon(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _saveToDownloads(filePath, fileName);
-                },
-                icon: const Icon(Icons.download),
-                label: const Text('Salvar em Downloads'),
-              ),
-          ],
-        );
-      },
-    );
-  }
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _saveToCustomDirectory(filePath, fileName);
+            },
+            icon: const Icon(Icons.folder),
+            label: const Text('Escolher Local'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
-  Future<void> _saveToDownloads(String sourcePath, String fileName) async {
-    try {
-      bool hasPermission = await requestStoragePermission();
-      if (!hasPermission) {
-        _showMessage('Permissão de armazenamento negada', isError: true);
-        return;
-      }
-
-      final Directory downloadsDir = Directory('/storage/emulated/0/Download');
-
-      if (await downloadsDir.exists()) {
-        final String destinationPath = p.join(downloadsDir.path, fileName);
-
-        final File sourceFile = File(sourcePath);
-        final File destinationFile = await sourceFile.copy(destinationPath);
-
-        if (await destinationFile.exists()) {
-          _showMessage('Arquivo salvo em: Downloads/$fileName');
-
-          _showOpenDownloadsOption(fileName);
-        }
-      } else {
-        _showMessage(
-          'Não foi possível acessar a pasta Downloads',
-          isError: true,
-        );
-      }
-    } catch (e) {
-      _showMessage('Erro ao salvar em Downloads: $e', isError: true);
+Future<void> _saveToCustomDirectory(String sourcePath, String fileName) async {
+  try {
+    bool hasPermission = await requestStoragePermission();
+    if (!hasPermission) {
+      _showMessage('Permissão de armazenamento negada', isError: true);
+      return;
     }
-  }
+    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    
+    if (selectedDirectory == null) {
+      return;
+    }
 
-  void _showOpenDownloadsOption(String fileName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Arquivo Salvo!'),
-          content: Text('O arquivo "$fileName" foi salvo na pasta Downloads.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
+    final String destinationPath = p.join(selectedDirectory, fileName);
+
+    final File sourceFile = File(sourcePath);
+    final File destinationFile = await sourceFile.copy(destinationPath);
+
+    if (await destinationFile.exists()) {
+      _showMessage('Arquivo salvo em: $destinationPath');
+      _showOpenCustomLocationOption(fileName, selectedDirectory);
+    } else {
+      _showMessage('Erro: Arquivo não foi salvo corretamente', isError: true);
+    }
+  } catch (e) {
+    _showMessage('Erro ao salvar arquivo: $e', isError: true);
+  }
+}
+
+void _showOpenCustomLocationOption(String fileName, String directory) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Arquivo Salvo!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('O arquivo "$fileName" foi salvo com sucesso!'),
+            const SizedBox(height: 8),
+            Text(
+              'Local: $directory',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
-        );
-      },
-    );
-  }
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   Future<void> _performImportFromJson() async {
     if (_userId == null) {
