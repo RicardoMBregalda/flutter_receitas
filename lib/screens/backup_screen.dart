@@ -154,10 +154,10 @@ class _BackupScreenState extends State<BackupScreen> {
           if (result.success) {
             _notificationService.showSuccessNotification(
               operation: 'Restauração da Nuvem',
-              details: result.message,
+              details: "Restauração concluída com sucesso!",
             );
             if (mounted) {
-              _showMessage(result.message);
+              _showMessage("Restauração concluída com sucesso!");
             }
           } else {
             _notificationService.showErrorNotification(
@@ -374,10 +374,10 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
             if (importResult.success) {
               _notificationService.showSuccessNotification(
                 operation: 'Importação JSON',
-                details: importResult.message,
+                details: "Importação concluída com sucesso!",
               );
               if (mounted) {
-                _showMessage(importResult.message);
+                _showMessage("Importação concluída com sucesso!");
               }
             } else {
               _notificationService.showErrorNotification(
