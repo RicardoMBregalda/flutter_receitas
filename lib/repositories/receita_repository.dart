@@ -70,60 +70,6 @@ class ReceitaRepository {
     return result;
   }
 
-  Future<void> upsertReceita(Receita receita) async {
-    _logger.d(
-      'Iniciando upsert de receita',
-      error: {
-        'receitaId': receita.id,
-        'nome': receita.nome,
-        'userId': receita.userId,
-      },
-    );
-
-    final exists = await receitaExiste(receita.id, receita.userId);
-
-    if (exists) {
-      _logger.d('Receita existe, atualizando');
-      await _db.editar(
-        'receita',
-        receita.toMapSemRelacoes(),
-        condicao: 'id = ? AND userId = ?',
-        conidcaoArgs: [receita.id, receita.userId],
-      );
-    } else {
-      _logger.d('Receita não existe, inserindo nova');
-      await _db.inserir('receita', receita.toMapSemRelacoes());
-    }
-
-    await _ingredienteRepo.removerTodosIngredientesDeUmaReceita(
-      receita.id,
-      receita.userId,
-    );
-    await _instrucaoRepo.removerTodasInstrucoesDeUmaReceita(
-      receita.id,
-      receita.userId,
-    );
-
-    for (var ingrediente in receita.ingredientes) {
-      ingrediente.receitaId = receita.id;
-      await _ingredienteRepo.adicionar(ingrediente);
-    }
-
-    for (var instrucao in receita.instrucoes) {
-      instrucao.receitaId = receita.id;
-      await _instrucaoRepo.adicionar(instrucao);
-    }
-
-    _logger.i(
-      'Upsert de receita concluído com sucesso',
-      error: {
-        'receitaId': receita.id,
-        'nome': receita.nome,
-        'operacao': exists ? 'atualização' : 'inserção',
-      },
-    );
-  }
-
   Future<bool> adicionarComBackup(Receita receita) async {
     try {
       _logger.d(
@@ -142,7 +88,12 @@ class ReceitaRepository {
 
       if (receitaExistente != null) {
         _logger.i('Receita ${receita.nome} já existe, atualizando...');
-        await upsertReceita(receita);
+        await _db.editar(
+        'receita',
+        receita.toMapSemRelacoes(),
+        condicao: 'id = ? AND userId = ?',
+        conidcaoArgs: [receita.id, receita.userId],
+      );
         _logger.i('Receita ${receita.nome} atualizada com sucesso');
       } else {
         _logger.i('Adicionando nova receita: ${receita.nome}');
