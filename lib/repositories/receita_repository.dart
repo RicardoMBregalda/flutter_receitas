@@ -89,11 +89,11 @@ class ReceitaRepository {
       if (receitaExistente != null) {
         _logger.i('Receita ${receita.nome} já existe, atualizando...');
         await _db.editar(
-        'receita',
-        receita.toMapSemRelacoes(),
-        condicao: 'id = ? AND userId = ?',
-        conidcaoArgs: [receita.id, receita.userId],
-      );
+          'receita',
+          receita.toMapSemRelacoes(),
+          condicao: 'id = ? AND userId = ?',
+          conidcaoArgs: [receita.id, receita.userId],
+        );
         _logger.i('Receita ${receita.nome} atualizada com sucesso');
       } else {
         _logger.i('Adicionando nova receita: ${receita.nome}');
@@ -326,6 +326,7 @@ class ReceitaRepository {
           'userId': userId,
           'ingredientesCount': receita.ingredientes.length,
           'instrucoesCount': receita.instrucoes.length,
+          'imagem': receita.urlImagem,
         },
       );
 

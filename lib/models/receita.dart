@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:receitas_trabalho_2/models/ingrediente.dart';
-import 'package:receitas_trabalho_2/models/instrucao.dart';
+import '/models/ingrediente.dart';
+import '/models/instrucao.dart';
 
 class Receita {
   String id;

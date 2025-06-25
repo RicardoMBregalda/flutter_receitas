@@ -1,11 +1,11 @@
-import 'package:receitas_trabalho_2/models/backup.dart';
-import 'package:receitas_trabalho_2/services/backup/local_backup_service.dart';
-import 'package:receitas_trabalho_2/services/backup/cloud_backup_service.dart';
+import '/models/backup.dart';
+import '/services/backup/local_backup_service.dart';
+import '/services/backup/cloud_backup_service.dart';
 
 class BackupService {
   final LocalBackupService _localBackupService = LocalBackupService();
   final CloudBackupService _cloudBackupService = CloudBackupService();
-  
+
   Future<BackupResult> exportRecipesToJsonAsync({
     required String userId,
     required String outputPath,

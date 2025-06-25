@@ -1,11 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:receitas_trabalho_2/firebase_options.dart';
-import 'package:receitas_trabalho_2/screens/auth_screen.dart';
-import 'package:receitas_trabalho_2/screens/backup_screen.dart';
-import 'package:receitas_trabalho_2/services/auth_service.dart';
-import 'package:receitas_trabalho_2/services/notification_service.dart';
+import '/firebase_options.dart';
+import '/screens/auth_screen.dart';
+import '/screens/backup_screen.dart';
+import '/services/auth_service.dart';
+import '/services/notification_service.dart';
 import '/screens/receita_create_screen.dart';
 import '/screens/receita_detalhe_screen.dart';
 import '/screens/receita_edit_screen.dart';
@@ -13,7 +13,6 @@ import '/services/auth_wrapper.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().init();
 

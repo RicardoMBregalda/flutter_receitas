@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:receitas_trabalho_2/services/auth_service.dart';
+import '/services/auth_service.dart';
 import '/repositories/receita_repository.dart';
 import '/models/receita.dart';
-import '/screens/receita_edit_screen.dart'; 
+import '/screens/receita_edit_screen.dart';
 
 class ReceitaDetalheScreen extends StatefulWidget {
   const ReceitaDetalheScreen({super.key});
@@ -96,7 +96,7 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
             _buildListaIngredientes(),
             const Divider(height: 32, indent: 16, endIndent: 16),
             _buildListaInstrucoes(),
-            const SizedBox(height: 32), 
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -105,6 +105,7 @@ class _ReceitaDetalheScreenState extends State<ReceitaDetalheScreen> {
 
   Widget _buildImagemReceita() {
     final String? url = _receita!.urlImagem;
+
     if (url == null || url.isEmpty) {
       return SizedBox(
         height: 250,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:receitas_trabalho_2/screens/backup_screen.dart';
-import 'package:receitas_trabalho_2/screens/receita_edit_screen.dart';
-import 'package:receitas_trabalho_2/services/local_auth_service.dart';
-import '/services/auth_service.dart'; 
+import '/screens/backup_screen.dart';
+import '/screens/receita_edit_screen.dart';
+import '/services/local_auth_service.dart';
+import '/services/auth_service.dart';
 import '/services/receita_service.dart';
 import '/models/receita.dart';
 import '/screens/receita_create_screen.dart';
@@ -72,68 +72,69 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   }
 
   void removerReceita(Receita receita) async {
-  final confirmar = await showDialog<bool>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Confirmar exclusão'),
-      content: Text(
-        'Deseja realmente excluir a receita "${receita.nome}"?',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
-          child: Text('Cancelar'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text('Excluir'),
-        ),
-      ],
-    ),
-  );
-
-  if (confirmar == true) {
-    final canUseBiometric = await _localAuthService.canUseBiometric();
-    
-    if (canUseBiometric) {
-      final isAuthenticated = await _localAuthService.authenticate(
-        'Autentique-se para excluir a receita',
-      );
-
-      if (!isAuthenticated) {
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Autenticação falhou. A receita não foi excluída.',
-                ),
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('Confirmar exclusão'),
+            content: Text(
+              'Deseja realmente excluir a receita "${receita.nome}"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                child: Text('Cancelar'),
               ),
-            );
-        }
-        return;
-      }
-    } 
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text('Excluir'),
+              ),
+            ],
+          ),
+    );
 
-    if (!mounted) return;
-    
-    final userId = Provider.of<AuthService>(context, listen: false).userId;
-    if (userId == null) return;
+    if (confirmar == true) {
+      final canUseBiometric = await _localAuthService.canUseBiometric();
 
-    await ReceitaRepository().remover(receita.id, userId);
-    _carregarReceitas();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(content: Text('Receita excluída com sucesso!')),
+      if (canUseBiometric) {
+        final isAuthenticated = await _localAuthService.authenticate(
+          'Autentique-se para excluir a receita',
         );
+
+        if (!isAuthenticated) {
+          if (mounted) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Autenticação falhou. A receita não foi excluída.',
+                  ),
+                ),
+              );
+          }
+          return;
+        }
+      }
+
+      if (!mounted) return;
+
+      final userId = Provider.of<AuthService>(context, listen: false).userId;
+      if (userId == null) return;
+
+      await ReceitaRepository().remover(receita.id, userId);
+      _carregarReceitas();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Receita excluída com sucesso!')),
+          );
+      }
     }
   }
-}
 
   void criarReceita() async {
     final result = await Navigator.pushNamed(
@@ -151,21 +152,22 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
   void _signOut() async {
     final confirmar = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar saída'),
-        content: const Text('Deseja realmente sair?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
-            child: const Text('Cancelar'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Confirmar saída'),
+            content: const Text('Deseja realmente sair?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Sair'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sair'),
-          ),
-        ],
-      ),
     );
     if (confirmar != true) return;
     if (!mounted) return;
@@ -177,13 +179,13 @@ class _ReceitaListScreenState extends State<ReceitaListScreen> {
     }
   }
 
-void _abrirTelaBackup() async {  
-  final userId = Provider.of<AuthService>(context, listen: false).userId;
-  if (userId == null) return;
+  void _abrirTelaBackup() async {
+    final userId = Provider.of<AuthService>(context, listen: false).userId;
+    if (userId == null) return;
 
-  await Navigator.pushNamed(context, BackupScreen.routeName);  
-  _carregarReceitas(); 
-}
+    await Navigator.pushNamed(context, BackupScreen.routeName);
+    _carregarReceitas();
+  }
 
   void verDetalhes(Receita receita) async {
     await Navigator.pushNamed(

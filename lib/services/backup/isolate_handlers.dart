@@ -2,11 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:intl/intl.dart';
-import 'package:receitas_trabalho_2/models/backup.dart';
-import 'package:receitas_trabalho_2/models/receita.dart';
+import '/models/backup.dart';
+import '/models/receita.dart';
 
 class IsolateHandlers {
-
   static void exportRecipesToJsonIsolate(Map<String, dynamic> data) async {
     final sendPort = data['sendPort'] as SendPort;
     try {
@@ -24,35 +23,40 @@ class IsolateHandlers {
         'recipes': recipes,
       };
 
-      final String jsonString = JsonEncoder.withIndent('  ').convert(backupData);
-      
+      final String jsonString = JsonEncoder.withIndent(
+        '  ',
+      ).convert(backupData);
+
       final file = File(outputPath);
       await file.writeAsString(jsonString, encoding: utf8);
       final fileSize = await file.length();
 
-      sendPort.send(BackupResult(
-        success: true,
-        message: "Backup criado com sucesso!\nLocal: $outputPath\nTamanho: ${(fileSize / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas",
-        data: {'filePath': outputPath, 'recipesCount': recipes.length},
-      ));
+      sendPort.send(
+        BackupResult(
+          success: true,
+          message:
+              "Backup criado com sucesso!\nLocal: $outputPath\nTamanho: ${(fileSize / 1024).toStringAsFixed(1)} KB\n${recipes.length} receitas exportadas",
+          data: {'filePath': outputPath, 'recipesCount': recipes.length},
+        ),
+      );
     } catch (e) {
-      sendPort.send(BackupResult(
-        success: false, 
-        message: "Erro ao criar backup no isolate: ${e.toString()}"
-      ));
+      sendPort.send(
+        BackupResult(
+          success: false,
+          message: "Erro ao criar backup no isolate: ${e.toString()}",
+        ),
+      );
     }
   }
-
 
   static void prepareRecipesFromJsonIsolate(BackupIsolateData data) {
     try {
       final Map<String, dynamic> backupData = jsonDecode(data.jsonString!);
-      
+
       if (!backupData.containsKey('recipes')) {
-        data.sendPort.send(BackupResult(
-          success: false, 
-          message: "Formato de backup inválido."
-        ));
+        data.sendPort.send(
+          BackupResult(success: false, message: "Formato de backup inválido."),
+        );
         return;
       }
 
@@ -61,28 +65,30 @@ class IsolateHandlers {
 
       for (final recipeData in recipesData) {
         final receita = Receita.fromMap(recipeData as Map<String, dynamic>);
-        receita.userId = data.userId; 
-        
+        receita.userId = data.userId;
+
         if (receita.ingredientes.isNotEmpty || receita.instrucoes.isNotEmpty) {
           recipesToImport.add(receita);
         }
       }
 
       data.sendPort.send(recipesToImport);
-
     } catch (e) {
-      data.sendPort.send(BackupResult(
-        success: false, 
-        message: "Erro ao processar o arquivo JSON: ${e.toString()}"
-      ));
+      data.sendPort.send(
+        BackupResult(
+          success: false,
+          message: "Erro ao processar o arquivo JSON: ${e.toString()}",
+        ),
+      );
     }
   }
-
 
   static void prepareFirestoreBackupIsolate(Map<String, dynamic> data) {
     final sendPort = data['sendPort'] as SendPort;
     try {
-      final String backupId = DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+      final String backupId = DateFormat(
+        'yyyy-MM-dd_HH-mm-ss',
+      ).format(DateTime.now());
       final recipes = data['recipes'] as List<dynamic>;
 
       final backupData = {
@@ -95,10 +101,7 @@ class IsolateHandlers {
         'recipes': recipes,
       };
 
-      sendPort.send({
-        'backupId': backupId,
-        'backupData': backupData,
-      });
+      sendPort.send({'backupId': backupId, 'backupData': backupData});
     } catch (e) {
       sendPort.send({'error': e.toString()});
     }
@@ -119,14 +122,15 @@ class IsolateHandlers {
           restoredRecipes.add(receita);
         }
       }
-      
-      sendPort.send(restoredRecipes);
 
+      sendPort.send(restoredRecipes);
     } catch (e) {
-      sendPort.send(BackupResult(
-        success: false, 
-        message: "Erro ao preparar dados para restauração: ${e.toString()}"
-      ));
+      sendPort.send(
+        BackupResult(
+          success: false,
+          message: "Erro ao preparar dados para restauração: ${e.toString()}",
+        ),
+      );
     }
   }
 }

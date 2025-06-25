@@ -5,9 +5,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:receitas_trabalho_2/services/auth_service.dart';
-import 'package:receitas_trabalho_2/services/backup/backup_service.dart';
-import 'package:receitas_trabalho_2/services/notification_service.dart';
+import '/services/auth_service.dart';
+import '/services/backup/backup_service.dart';
+import '/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as p;
 
@@ -98,6 +98,7 @@ class _BackupScreenState extends State<BackupScreen> {
       );
     }
   }
+
   Future<void> _performCloudBackup() async {
     if (_userId == null) {
       _showMessage('Usuário não autenticado', isError: true);
@@ -112,7 +113,7 @@ class _BackupScreenState extends State<BackupScreen> {
               details: result.message,
             );
             if (mounted) {
-              _loadCloudBackups(); 
+              _loadCloudBackups();
             }
           } else {
             _notificationService.showErrorNotification(
@@ -146,7 +147,6 @@ class _BackupScreenState extends State<BackupScreen> {
               operation: 'Restauração da Nuvem',
               details: "Restauração concluída com sucesso!",
             );
-  
           } else {
             _notificationService.showErrorNotification(
               operation: 'Restauração da Nuvem',
@@ -204,102 +204,105 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   void _showExportOptionsDialog(String filePath, String fileName) {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Backup Exportado com Sucesso!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Arquivo: $fileName'),
-            const SizedBox(height: 16),
-            const Text(
-              'O que você deseja fazer com o backup?',
-              style: TextStyle(fontWeight: FontWeight.bold),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Backup Exportado com Sucesso!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Arquivo: $fileName'),
+              const SizedBox(height: 16),
+              const Text(
+                'O que você deseja fazer com o backup?',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Fechar'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _saveToCustomDirectory(filePath, fileName);
+              },
+              icon: const Icon(Icons.folder),
+              label: const Text('Escolher Local'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Fechar'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _saveToCustomDirectory(filePath, fileName);
-            },
-            icon: const Icon(Icons.folder),
-            label: const Text('Escolher Local'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-Future<void> _saveToCustomDirectory(String sourcePath, String fileName) async {
-  try {
-    bool hasPermission = await requestStoragePermission();
-    if (!hasPermission) {
-      _showMessage('Permissão de armazenamento negada', isError: true);
-      return;
-    }
-    String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-    
-    if (selectedDirectory == null) {
-      return;
-    }
-    final String destinationPath = p.join(selectedDirectory, fileName);
-
-    final File sourceFile = File(sourcePath);
-    final File destinationFile = await sourceFile.copy(destinationPath);
-
-    if (await destinationFile.exists()) {
-      _showOpenCustomLocationOption(fileName, selectedDirectory);
-    } else {
-      _showMessage('Erro: Arquivo não foi salvo corretamente', isError: true);
-    }
-  } catch (e) {
-    _showMessage('Erro ao salvar arquivo: $e', isError: true);
+        );
+      },
+    );
   }
-}
 
-void _showOpenCustomLocationOption(String fileName, String directory) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Arquivo Salvo!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('O arquivo "$fileName" foi salvo com sucesso!'),
-            const SizedBox(height: 8),
-            Text(
-              'Local: $directory',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+  Future<void> _saveToCustomDirectory(
+    String sourcePath,
+    String fileName,
+  ) async {
+    try {
+      bool hasPermission = await requestStoragePermission();
+      if (!hasPermission) {
+        _showMessage('Permissão de armazenamento negada', isError: true);
+        return;
+      }
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+
+      if (selectedDirectory == null) {
+        return;
+      }
+      final String destinationPath = p.join(selectedDirectory, fileName);
+
+      final File sourceFile = File(sourcePath);
+      final File destinationFile = await sourceFile.copy(destinationPath);
+
+      if (await destinationFile.exists()) {
+        _showOpenCustomLocationOption(fileName, selectedDirectory);
+      } else {
+        _showMessage('Erro: Arquivo não foi salvo corretamente', isError: true);
+      }
+    } catch (e) {
+      _showMessage('Erro ao salvar arquivo: $e', isError: true);
+    }
+  }
+
+  void _showOpenCustomLocationOption(String fileName, String directory) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Arquivo Salvo!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('O arquivo "$fileName" foi salvo com sucesso!'),
+              const SizedBox(height: 8),
+              Text(
+                'Local: $directory',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
   Future<void> _performImportFromJson() async {
     if (_userId == null) {
@@ -381,7 +384,7 @@ void _showOpenCustomLocationOption(String fileName, String directory) {
         operation: 'Exclusão de Backup',
         details: result,
       );
-      await _loadCloudBackups(); 
+      await _loadCloudBackups();
     } catch (e) {
       final errorMessage = 'Erro ao excluir backup: $e';
       _notificationService.showErrorNotification(

@@ -1,11 +1,10 @@
 import 'dart:isolate';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:receitas_trabalho_2/models/backup.dart';
-import 'package:receitas_trabalho_2/models/receita.dart';
-import 'package:receitas_trabalho_2/repositories/receita_repository.dart';
-import 'package:receitas_trabalho_2/services/backup/isolate_handlers.dart';
-
+import '/models/backup.dart';
+import '/models/receita.dart';
+import '/repositories/receita_repository.dart';
+import '/services/backup/isolate_handlers.dart';
 
 class LocalBackupService {
   final ReceitaRepository _receitaRepository = ReceitaRepository();
@@ -17,29 +16,37 @@ class LocalBackupService {
   }) async {
     try {
       _logger.i("Iniciando exportação para o caminho: $outputPath");
-      
-      final List<Receita> recipes = await _receitaRepository.listarReceitasPorUsuario(userId);
-      
+
+      final List<Receita> recipes = await _receitaRepository
+          .listarReceitasPorUsuario(userId);
+
       if (recipes.isEmpty) {
-        return BackupResult(success: false, message: "Nenhuma receita encontrada para exportar.");
+        return BackupResult(
+          success: false,
+          message: "Nenhuma receita encontrada para exportar.",
+        );
       }
 
       final receivePort = ReceivePort();
-      await Isolate.spawn(
-        IsolateHandlers.exportRecipesToJsonIsolate,
-        {
-          'userId': userId,
-          'outputPath': outputPath,
-          'recipes': recipes.map((r) => r.toMapCompleto()).toList(),
-          'sendPort': receivePort.sendPort,
-        },
-      );
+      await Isolate.spawn(IsolateHandlers.exportRecipesToJsonIsolate, {
+        'userId': userId,
+        'outputPath': outputPath,
+        'recipes': recipes.map((r) => r.toMapCompleto()).toList(),
+        'sendPort': receivePort.sendPort,
+      });
 
       final result = await receivePort.first as BackupResult;
       return result;
     } catch (e, stackTrace) {
-      _logger.e('Erro ao iniciar isolate de exportação', error: e, stackTrace: stackTrace);
-      return BackupResult(success: false, message: 'Erro ao exportar: ${e.toString()}');
+      _logger.e(
+        'Erro ao iniciar isolate de exportação',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return BackupResult(
+        success: false,
+        message: 'Erro ao exportar: ${e.toString()}',
+      );
     }
   }
 
@@ -92,40 +99,47 @@ class LocalBackupService {
       return BackupResult(
         success: true,
         message: resultado,
-        data: {'imported': importedCount, 'skipped': skippedCount, 'errors': errorCount},
+        data: {
+          'imported': importedCount,
+          'skipped': skippedCount,
+          'errors': errorCount,
+        },
       );
     } catch (e) {
       _logger.e('Erro ao importar de JSON', error: e);
-      return BackupResult(success: false, message: 'Erro ao importar: ${e.toString()}');
+      return BackupResult(
+        success: false,
+        message: 'Erro ao importar: ${e.toString()}',
+      );
     }
   }
 
-
   Future<bool> solicitarPermissaoArmazenamento() async {
-      final androidInfo = await _getAndroidVersion();
+    final androidInfo = await _getAndroidVersion();
 
-      if (androidInfo >= 30) {
-        return true;
-      } else {
-        final status = await Permission.storage.status;
-
-        if (status.isGranted) {
-          return true;
-        }
-
-        if (status.isDenied) {
-          final novoStatus = await Permission.storage.request();
-          return novoStatus.isGranted;
-        }
-
-        if (status.isPermanentlyDenied) {
-          _logger.w("Permissão de armazenamento permanentemente negada. Abrindo configurações.");
-          await openAppSettings();
-          return false;
-        }
-      }
+    if (androidInfo >= 30) {
       return true;
-  
+    } else {
+      final status = await Permission.storage.status;
+
+      if (status.isGranted) {
+        return true;
+      }
+
+      if (status.isDenied) {
+        final novoStatus = await Permission.storage.request();
+        return novoStatus.isGranted;
+      }
+
+      if (status.isPermanentlyDenied) {
+        _logger.w(
+          "Permissão de armazenamento permanentemente negada. Abrindo configurações.",
+        );
+        await openAppSettings();
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<int> _getAndroidVersion() async {
